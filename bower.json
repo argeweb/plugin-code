@@ -1,0 +1,20 @@
+{
+  "name": "code",
+  "homepage": "https://github.com/argeweb/plugin-code",
+  "authors": [
+    "cwen0708 <cwen0708@gmail.com>"
+  ],
+  "description": "edir js css html code online",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "application_user": "argeweb/plugin-application-user"
+  }
+}

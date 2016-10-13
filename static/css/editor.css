@@ -1,0 +1,53 @@
+html, body, textarea{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #eee;
+}
+#code-box{
+    float: left;
+    width: 99.99%;
+    height: calc(100% - 60px);
+    margin: 0 0 60px;
+    box-shadow: rgba(0,0,0,0.3) 0 1px 4px 0;
+    z-index: 1699;
+}
+.CodeMirror { height: 100%; }
+#menu{
+    height: 58px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+.btn {
+    display: inline-block;
+    min-height: 30px;
+    padding: 0 12px;
+    border: 0;
+    background: #eee;
+    line-height: 30px;
+    color: #444;
+    letter-spacing: normal;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    vertical-align: middle;
+    text-decoration: none;
+    width: 100%;
+    text-align: center;
+}
+.btn-primary {
+    color: #fff;
+    background-color: #00a8e6;
+}
+.btn-save{
+    float: right;
+    margin: 10px;
+    width: 80px;
+    height: 40px;
+}
+select{
+    padding: 3px 10px;
+    border-radius: 5px;
+    margin: 15px;
+    font-size: 15px;
+}

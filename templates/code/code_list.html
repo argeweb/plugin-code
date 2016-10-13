@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.3/jquery.min.js"></script>
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/lib/codemirror.css">
+    <script src="/js/codemirror-5.15.2/lib/codemirror.js"></script>
+    <script src="/js/codemirror-5.15.2/mode/javascript/javascript.js"></script>
+    <script src="/js/codemirror-5.15.2/mode/css/css.js"></script>
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/3024-day.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/3024-night.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/abcdef.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/ambiance.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/base16-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/bespin.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/base16-light.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/blackboard.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/cobalt.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/colorforth.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/dracula.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/eclipse.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/elegant.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/erlang-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/hopscotch.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/icecoder.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/isotope.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/lesser-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/liquibyte.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/material.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/mbo.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/mdn-like.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/midnight.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/monokai.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/neat.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/neo.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/night.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/paraiso-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/paraiso-light.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/pastel-on-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/railscasts.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/rubyblue.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/seti.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/solarized.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/the-matrix.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/tomorrow-night-bright.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/tomorrow-night-eighties.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/ttcn.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/twilight.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/vibrant-ink.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/xq-dark.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/xq-light.css">
+    <link rel="stylesheet" href="/js/codemirror-5.15.2/theme/yeti.css">
+    <link rel="stylesheet" href="/css/editor.css">
+</head>
+<body>
+<div id="menu">
+    <select id="theme-select" onchange="selectTheme()" id=select>
+        <option selected>default</option>
+        <option>3024-day</option>
+        <option>3024-night</option>
+        <option>abcdef</option>
+        <option>ambiance</option>
+        <option>base16-dark</option>
+        <option>base16-light</option>
+        <option>bespin</option>
+        <option>blackboard</option>
+        <option>cobalt</option>
+        <option>colorforth</option>
+        <option>dracula</option>
+        <option>eclipse</option>
+        <option>elegant</option>
+        <option>erlang-dark</option>
+        <option>hopscotch</option>
+        <option>icecoder</option>
+        <option>isotope</option>
+        <option>lesser-dark</option>
+        <option>liquibyte</option>
+        <option>material</option>
+        <option>mbo</option>
+        <option>mdn-like</option>
+        <option>midnight</option>
+        <option>monokai</option>
+        <option>neat</option>
+        <option>neo</option>
+        <option>night</option>
+        <option>paraiso-dark</option>
+        <option>paraiso-light</option>
+        <option>pastel-on-dark</option>
+        <option>railscasts</option>
+        <option>rubyblue</option>
+        <option>seti</option>
+        <option>solarized dark</option>
+        <option>solarized light</option>
+        <option>the-matrix</option>
+        <option>tomorrow-night-bright</option>
+        <option>tomorrow-night-eighties</option>
+        <option>ttcn</option>
+        <option>twilight</option>
+        <option>vibrant-ink</option>
+        <option>xq-dark</option>
+        <option>xq-light</option>
+        <option>yeti</option>
+        <option>zenburn</option>
+    </select>
+    <button class="btn btn-primary btn-save">儲存</button>
+</div>
+<div id="js-box">
+<textarea id="js-code" name="code" style="float: right; height: 100%">
+{{ customer }}
+</textarea>
+</div>
+<div id="css-box">
+<textarea id="css-code" name="code" style="float: right; height: 100%">
+/* Some example CSS */
+
+@import url("something.css");
+
+body {
+  margin: 0;
+  padding: 3em 6em;
+  font-family: tahoma, arial, sans-serif;
+  color: #000;
+}
+
+#navigation a {
+  font-weight: bold;
+  text-decoration: none !important;
+}
+
+h1 {
+  font-size: 2.5em;
+}
+
+h2 {
+  font-size: 1.7em;
+}
+
+h1:before, h2:before {
+  content: "::";
+}
+
+code {
+  font-family: courier, monospace;
+  font-size: 80%;
+  color: #418A8A;
+}
+</textarea>
+</div>
+<script>
+    var editor_css = CodeMirror.fromTextArea(document.getElementById("css-code"), {
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        mode: "css"
+    });
+    var editor_js = CodeMirror.fromTextArea(document.getElementById("js-code"), {
+        lineNumbers: true,
+        viewportMargin: Infinity,
+        mode: "javascript"
+    });
+    function selectTheme(){
+        var theme = $("#theme-select option:selected").text();
+        editor_js.setOption("theme", theme);
+        editor_css.setOption("theme", theme);
+    }
+</script>
+</body>
+</html>
