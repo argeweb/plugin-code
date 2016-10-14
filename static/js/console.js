@@ -98,19 +98,26 @@ function selectTheme(){
 function after_save(data){
     showNotify("已儲存");
     var cv = $("#target").val();
-    var pt =$("input[name='page_type']:checked").val();
+    var pts = $("#target option:selected").text();
+    var pt = "html";
+    if (pts.indexOf(".js") > 0){
+        pt = "javascript";
+    }
+    if (pts.indexOf(".css") > 0){
+        pt = "css";
+    }
     $("#record_list").load("/code/records.html?target=" + cv + "&file_type=" + pt, function(){
         $(".record-item").on("click", function(){
             show_page($(this).data("url"));
         });
     });
-
-    $.ajax({
-        type: 'post',
-        url: "https://www.orderplus.com.tw/remote/api_refresh",
-        dataType: 'jsonp',
-        jsonpCallback: "OrderPlus.message.load"
-    });
+    //
+    //$.ajax({
+    //    type: 'post',
+    //    url: "https://www.orderplus.com.tw/remote/api_refresh",
+    //    dataType: 'jsonp',
+    //    jsonpCallback: "OrderPlus.message.load"
+    //});
 }
 
 $(function(){

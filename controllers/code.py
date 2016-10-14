@@ -8,25 +8,26 @@
 
 import datetime
 from time import time
-from ..models.code_model import CodeModel
-from ..models.code_target_model import CodeTargetModel as target_model
-from argeweb import settings, Pagination
-from argeweb.core.gaeforms import model_form
 from argeweb import auth, add_authorizations
-from argeweb import Controller, route_with, route, controllers
+from argeweb import Controller, scaffold, route_menu, Fields, route_with
+from argeweb.components.pagination import Pagination
+from argeweb.components.search import Search
+from ..models.code_target_model import CodeTargetModel
+from ..models.code_model import CodeModel
 
 
 class Code(Controller):
     class Meta:
-        Model = CodeModel
+        components = (scaffold.Scaffolding, Pagination, Search)
+        pagination_limit = 10
 
     @route_with('/code/')
     @add_authorizations(auth.require_admin)
     def index(self):
         self.context["body_class"] = "show_list"
-        self.context["html_list"] = target_model.content_type_sort_by_title("html")
-        self.context["javascript_list"] = target_model.content_type_sort_by_title("javascript")
-        self.context["css_list"] = target_model.content_type_sort_by_title("css")
+        self.context["html_list"] = CodeTargetModel.content_type_sort_by_title("html")
+        self.context["javascript_list"] = CodeTargetModel.content_type_sort_by_title("javascript")
+        self.context["css_list"] = CodeTargetModel.content_type_sort_by_title("css")
 
     @route_with('/code/create')
     @add_authorizations(auth.require_admin)
@@ -34,14 +35,13 @@ class Code(Controller):
         target_name = self.params.get_string("path")
         content_type = "css" if target_name.endswith(".css") else "html"
         content_type = "javascript" if target_name.endswith(".js") else content_type
-        n = target_model.get_by_name(target_name)
+        n = CodeTargetModel.get_by_name(target_name)
         if n is None:
-            n = target_model()
+            n = CodeTargetModel()
         n.title = target_name
         n.content_type = content_type
         n.put()
         return n.title
-
 
     @route_with('/code/welcome.html')
     @add_authorizations(auth.require_admin)
@@ -53,7 +53,7 @@ class Code(Controller):
     def records(self):
         target = self.params.get_ndb_record("target")
         file_type = self.params.get_string("file_type")
-        records = self.meta.Model.all_with_target(target, file_type)
+        records = CodeModel.all_with_target(target, file_type)
 
         self.context["target"] = target
         self.context["target_key"] = self.params.get_string("target")
@@ -92,7 +92,7 @@ class Code(Controller):
             return
         target.put()
 
-        n = self.meta.Model()
+        n = CodeModel()
         n.title = u" 版本 " + str(version)
         n.source = code
         n.source_mini = source_minify
@@ -108,7 +108,7 @@ class Code(Controller):
         self.meta.change_view('jsonp')
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-        target = target_model.get_by_name(target_name)
+        target = CodeTargetModel.get_by_name(target_name)
         self.context['data'] = {
             'content': target.title,
             'js-version': target.js_version,
@@ -120,10 +120,10 @@ class Code(Controller):
     @route_with(template='/<:(assets|code)>/<:(.*)>.html')
     def html(self, c, target_name, version=None):
         target_name, version, is_min = self.get_params(target_name, ".html")
-        c = target_model.get_by_name(target_name)
+        c = CodeTargetModel.get_by_name(target_name)
         if version is None:
             version = str(c.html_version)
-        s = self.meta.Model.get_source(target=c, content_type="html", version=version)
+        s = CodeModel.get_source(target=c, content_type="html", version=version)
         if s is None:
             return self.error_and_abort(404)
         self.meta.change_view('render')
@@ -137,7 +137,7 @@ class Code(Controller):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
         target_name, version, is_min, content_type = self.get_params(target_name, "." + content_type)
-        c = target_model.get_by_name(target_name)
+        c = CodeTargetModel.get_by_name(target_name)
         if c is None:
             return self.error_and_abort(404)
         version = str(c.last_version) if version is "" else version
@@ -146,7 +146,7 @@ class Code(Controller):
         self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
         self.response.headers['Content-Type'] = 'text/' + content_type
         self.response.headers["ETag"] = str(target_name) + "_" + version
-        s = self.meta.Model.get_source(target=c, content_type=content_type, version=version)
+        s = CodeModel.get_source(target=c, content_type=content_type, version=version)
         if s is None:
             return self.error_and_abort(404)
         if is_min is True:
@@ -168,11 +168,11 @@ class Code(Controller):
         return_dict = {}
         js_file_name = self.params.get_string("js", u"api,channel").split(",")
         for item in js_file_name:
-            js = target_model.get_by_name(item)
+            js = CodeTargetModel.get_by_name(item)
             return_dict["js-%s-%s" % (item, js.js_version)] = "/code/%s_%s.js" % (item, js.js_version)
         css_file_name = self.params.get_string("css", u"mini").split(",")
         for item in css_file_name:
-            css = target_model.get_by_name(item)
+            css = CodeTargetModel.get_by_name(item)
             return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
         self.context['data'] = return_dict
 
