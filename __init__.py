@@ -5,7 +5,6 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
-from argeweb import datastore
 
 plugins_helper = {
     "title": u"線上編輯原始碼",

@@ -13,22 +13,29 @@ from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
 
 
+def get_by_name(name):
+    return CodeTargetModel.get_by_name(name)
+
+
 class CodeTargetModel(BasicModel):
     class Meta:
         behaviors = (Searchable,)
         label_name = {
             "title": u"目標名稱",
-            "url": u"網址",
-            "is_enable": u"顯示於前台",
-            "telephone": u"連絡方式",
-            "image": u"照片",
-            "content": u"簡介",
+            "content_type": u"ContentType",
+            "last_version": u"Version",
         }
     title = Fields.StringProperty(default=u"未命名")
-    js_version = Fields.IntegerProperty(default=0)
-    css_version = Fields.IntegerProperty(default=0)
-    html_version = Fields.IntegerProperty(default=0)
+    content_type = Fields.StringProperty()
+    last_version = Fields.IntegerProperty(default=0)
 
     @classmethod
     def get_by_name(cls, name):
         return cls.query(cls.title==name).get()
+
+    @classmethod
+    def content_type_sort_by_title(cls, content_type):
+        """
+        Queries all posts in the system, regardless of user, ordered by date created descending.
+        """
+        return cls.query(cls.content_type == content_type).order(cls.title)

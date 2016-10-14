@@ -32,7 +32,14 @@ function showNotify(msg){
 
 function change_view(){
     var cv = $("#target").val();
-    var pt =$("input[name='page_type']:checked").val();
+    var pts = $("#target option:selected").text();
+    var pt = "html";
+    if (pts.indexOf(".js") > 0){
+        pt = "javascript";
+    }
+    if (pts.indexOf(".css") > 0){
+        pt = "css";
+    }
     if (cv == "" || (cv == target_id  && pt == last_page_type)){
         return;
     }

@@ -21,21 +21,26 @@ class Code(Controller):
         Model = CodeModel
 
     @route_with('/code/')
-    @route_with('/code/<target_name>/edit.html')
     @add_authorizations(auth.require_admin)
-    def index(self, target_name=None):
+    def index(self):
         self.context["body_class"] = "show_list"
-        if target_name is None:
-            self.context["list"] = target_model.all()
-            return
+        self.context["html_list"] = target_model.content_type_sort_by_title("html")
+        self.context["javascript_list"] = target_model.content_type_sort_by_title("javascript")
+        self.context["css_list"] = target_model.content_type_sort_by_title("css")
 
+    @route_with('/code/create')
+    @add_authorizations(auth.require_admin)
+    def create(self):
+        target_name = self.params.get_string("path")
+        content_type = "css" if target_name.endswith(".css") else "html"
+        content_type = "javascript" if target_name.endswith(".js") else content_type
         n = target_model.get_by_name(target_name)
         if n is None:
             n = target_model()
-            n.title = target_name
-            n.put()
-        self.context["body_class"] = "show_record"
-        self.context["list"] = [n]
+        n.title = target_name
+        n.content_type = content_type
+        n.put()
+        return n.title
 
 
     @route_with('/code/welcome.html')
@@ -72,17 +77,16 @@ class Code(Controller):
         self.meta.change_view("json")
         code = self.params.get_string("code")
         target = self.params.get_ndb_record("target")
-        file_type = self.params.get_string("file_type")
-        source_minify = u""
+        content_type = self.params.get_string("file_type")
         version = int(time()) - 1460000000
-        if file_type == "javascript":
-            target.js_version = version
+        target.last_version = version
+        target.content_type = content_type
+        if content_type == "javascript":
             source_minify = self.mini_js(code)
-        elif file_type == "css":
-            target.css_version = version
+        elif content_type == "css":
             source_minify = self.mini_css(code)
-        elif file_type == "html":
-            target.html_version = version
+        elif content_type == "html":
+            source_minify = u""
         else:
             self.context["data"] = {"error": "Wrong File Type"}
             return
@@ -93,7 +97,7 @@ class Code(Controller):
         n.source = code
         n.source_mini = source_minify
         n.version = version
-        n.code_type = file_type
+        n.content_type = content_type
         n.target = target.key
         n.put()
         self.context["data"] = {"info": "done"}
@@ -113,68 +117,43 @@ class Code(Controller):
             'version': os.environ['CURRENT_VERSION_ID']
         }
 
-    @route_with('/c/<target_name>.html')
-    @route_with('/code/<target_name>_<version>.html')
-    def html(self, target_name, version=None):
+    @route_with(template='/<:(assets|code)>/<:(.*)>.html')
+    def html(self, c, target_name, version=None):
+        target_name, version, is_min = self.get_params(target_name, ".html")
         c = target_model.get_by_name(target_name)
         if version is None:
             version = str(c.html_version)
-        s = self.meta.Model.get_source(target=c, code_type="html", version=version)
-        source = u""
-        if s is not None:
-            source = s.source
-            version = s.version
+        s = self.meta.Model.get_source(target=c, content_type="html", version=version)
+        if s is None:
+            return self.error_and_abort(404)
+        self.meta.change_view('render')
         self.context["record"] = {
-            "source": source,
-            "version": version
+            "source": s.source,
+            "version": s.version
         }
 
-    @route_with('/c/<target_name>.js')
-    @route_with('/code/<target_name>_<version>.js')
-    def js(self, target_name, version=None):
+    @route_with(template='/<:(assets|code)>/<:(.*)>.<:(js|css)>')
+    def js_or_css(self, c, target_name, content_type):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
-        self.meta.change_view('render')
+        target_name, version, is_min, content_type = self.get_params(target_name, "." + content_type)
         c = target_model.get_by_name(target_name)
-        if version is None:
-            self.response.headers["Cache-control"] = "public, max-age=60"
-            version = str(c.js_version)
-        else:
-            self.response.headers["Cache-control"] = "public, max-age=604800"
-        self.response.headers['Content-Type'] = 'text/javascript'
-        self.response.headers["ETag"] = target_name + "_" + version
-        s = self.meta.Model.get_source(target=c, code_type="javascript", version=version)
-        source = u""
-        if s is not None:
+        if c is None:
+            return self.error_and_abort(404)
+        version = str(c.last_version) if version is "" else version
+        self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
+        self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+        self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
+        self.response.headers['Content-Type'] = 'text/' + content_type
+        self.response.headers["ETag"] = str(target_name) + "_" + version
+        s = self.meta.Model.get_source(target=c, content_type=content_type, version=version)
+        if s is None:
+            return self.error_and_abort(404)
+        if is_min is True:
             source = s.source_mini
-        if source is None:
-            source = s.source
-        self.context["record"] = {
-            "target_name": target_name,
-            "source": source,
-            "version": version
-        }
-
-    @route_with('/c/<target_name>.css')
-    @route_with('/code/<target_name>_<version>.css')
-    def css(self, target_name, version=None):
-        if self.request.headers.get('If-None-Match'):
-            return self.abort(304)
-        c = target_model.get_by_name(target_name)
-        if version is None:
-            self.response.headers["Cache-control"] = "public, max-age=60"
-            version = str(c.css_version)
         else:
-            self.response.headers["Cache-control"] = "public, max-age=604800"
-        self.response.headers['Content-Type'] = 'text/css'
-        self.response.headers["ETag"] = target_name + "_" + version
+            source = s.source
         self.meta.change_view('render')
-        s = self.meta.Model.get_source(target=c, code_type="css", version=version)
-        source = u""
-        if s is not None:
-            source = s.source_mini
-        if source is None:
-            source = s.source
         self.context["record"] = {
             "target_name": target_name,
             "source": source,
@@ -203,6 +182,21 @@ class Code(Controller):
         self.context['data'] = {
             'status': "enable"
         }
+
+    def get_params(self, target_name, hotfix):
+        is_min = False
+        if str(target_name).endswith(".min"):
+            is_min = True
+            target_name = target_name.split(".min")[0]
+        try:
+            version = target_name.split("/")[-1].split("_")[-1].split(".")[0]
+            version = int(version)
+            target_name = target_name.split("_"+str(version))[0]
+        except:
+            version = ""
+        target_name = "/" + target_name + hotfix
+        content_type = "javascript" if hotfix == "js" else "css"
+        return target_name, str(version), is_min, content_type
 
     def mini_js(self, js):
         from jsmin import jsmin
