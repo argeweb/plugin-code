@@ -24,24 +24,44 @@ class Code(Controller):
     @route_with('/code/')
     @add_authorizations(auth.require_admin)
     def index(self):
-        self.context["body_class"] = "show_list"
-        self.context["html_list"] = CodeTargetModel.content_type_sort_by_title("html")
-        self.context["javascript_list"] = CodeTargetModel.content_type_sort_by_title("javascript")
-        self.context["css_list"] = CodeTargetModel.content_type_sort_by_title("css")
+        self.context["target"] = self.params.get_ndb_record("key")
 
     @route_with('/code/create')
     @add_authorizations(auth.require_admin)
     def create(self):
         target_name = self.params.get_string("path")
-        content_type = "css" if target_name.endswith(".css") else "html"
-        content_type = "javascript" if target_name.endswith(".js") else content_type
+        content_type = ""
+        if target_name.startswith("/") is False:
+            target_name = "/" + target_name
+        target_name = target_name.replace("/assets", "")
+        if target_name.endswith(".css") is True:
+            content_type = "css"
+        if target_name.endswith(".html") is True:
+            content_type = "html"
+        if target_name.endswith(".js") is True:
+            content_type = "javascript"
         n = CodeTargetModel.get_by_name(target_name)
+        info = "error"
+        msg = u"檔案已存在"
+        html = u""
+        if content_type is "":
+            msg = u"檔案需為 .js  .css  .html"
         if n is None:
+            info = "done"
+            msg = u"檔案新增成功!"
             n = CodeTargetModel()
-        n.title = target_name
-        n.content_type = content_type
-        n.put()
-        return n.title
+            n.title = target_name
+            n.content_type = content_type
+            n.put()
+            html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code_target/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
+                   % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
+        self.meta.change_view("json")
+        self.context["data"] = {
+            "info": info,
+            "path": target_name,
+            "msg": msg,
+            "html": html
+        }
 
     @route_with('/code/welcome.html')
     @add_authorizations(auth.require_admin)
@@ -52,16 +72,13 @@ class Code(Controller):
     @add_authorizations(auth.require_admin)
     def records(self):
         target = self.params.get_ndb_record("target")
-        file_type = self.params.get_string("file_type")
-        records = CodeModel.all_with_target(target, file_type)
-
-        self.context["target"] = target
-        self.context["target_key"] = self.params.get_string("target")
-        self.context["records"] = records.fetch(50)
-        self.context["file_type"] = self.params.get_string("file_type")
-        self.context["has_record"] = False
-        if records.get() is not None:
-            self.context["has_record"] = True
+        content_type = self.params.get_string("content_type")
+        records = CodeModel.all_with_target(target, content_type)
+        self.meta.change_view("json")
+        self.context['data'] = {
+            'info': "done",
+            'records': records.fetch(15)
+        }
 
     @route_with('/code/editor.html')
     @add_authorizations(auth.require_admin)

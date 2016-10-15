@@ -1,18 +1,7 @@
-<div class="cm-vars cm-form uk-form">
-    
-    <fieldset>
-        {% if has_record %}
-        {% for item in records %}
-        <div class="uk-form-row record-item" data-url="/code/editor.html?customer={{ customer_key }}&file_type={{ file_type }}&record_key={{ this.encode_key(item) }}">
-            <label class="uk-form-label" title="{{ item.modified }}">版本 {{ item.version }} <br />
-                <small style="color: #ddd;">{{ item.modified }}</small></label>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div class="uk-form-row record-item" data-url="/code/editor.html?customer={{ customer_key }}&file_type={{ file_type }}&record_key=">
-            <label class="uk-form-label" title="INV1" style="line-height: 24px !important; text-align: left; cursor: pointer; color: #00a8e6;">新記錄</label>
-        </div>
-        {% endif %}
-    </fieldset>
-    
-</div>
+{% if has_record %}
+{% for item in records %}
+{"target": "{{ customer_key }}", "content_type": "{{ file_type }}", "item": "{{ this.encode_key(item) }}", "version": "{{ item.version }}", "modified": "{{ item.modified }}" },
+{% endfor %}
+{% else %}
+{"target": "{{ customer_key }}", "content_type": "{{ file_type }}", "item": "", "version": "", "modified": "" },
+{% endif %}

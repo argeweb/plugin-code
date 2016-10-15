@@ -11,6 +11,7 @@ from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
+import logging
 
 
 def get_by_name(name):

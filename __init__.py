@@ -24,6 +24,7 @@ plugins_helper = {
         "code_target": {
             "group": u"原始碼",
             "actions": [
+                {"action": "code_manager", "name": u"原始碼管理"},
                 {"action": "code_editor", "name": u"線上編輯器"},
                 {"action": "list", "name": u"原始碼管理"},
                 {"action": "add", "name": u"新增原始碼"},

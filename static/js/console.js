@@ -24,38 +24,20 @@ function ajax(url,data,successCallback,errorCallback){$.ajax({url:url,type:"GET"
 function html2text(){$(".html_2_text").each(function(){var text=$(this).text();var old_length=$(this).text().length;var length=50;if($(this).data("word-count")!=undefined){try{length=parseInt($(this).data("word-count"))}catch(e){}}if(length>0){$(this).text(text.substring(0,length));if(old_length>=length){$(this).text($(this).text()+"...")}}$(this).show()})};
 function yooliang_replace_url_param(url,name,newvalue){url=url.replace("#/","");var old="";var m=url.substring(0,url.indexOf("?"));var s=url.substring(url.indexOf("?"),url.length);var j=0;if(url.indexOf("?")>=0){var i=s.indexOf(name+"=");if(i>=0){j=s.indexOf("&",i);if(j>=0){old=s.substring(i+name.length+1,j);s=url.replace(name+"="+old,name+"="+newvalue)}else{old=s.substring(i+name.length+1,s.length);s=url.replace(name+"="+old,name+"="+newvalue)}}else{s=url+"&"+name+"="+newvalue}}else{s=url+"?"+name+"="+newvalue}return s};
 var target_id = "";
-var last_page_type = "";
+var target_path = "";
+var target_type = "";
 
 function showNotify(msg){
     $.UIkit.notify(msg, {pos:'bottom-right'});
 }
 
-function change_view(){
-    var cv = $("#target").val();
-    var pts = $("#target option:selected").text();
-    var pt = "html";
-    if (pts.indexOf(".js") > 0){
-        pt = "javascript";
-    }
-    if (pts.indexOf(".css") > 0){
-        pt = "css";
-    }
-    if (cv == "" || (cv == target_id  && pt == last_page_type)){
-        return;
-    }
-    target_id = cv;
-    last_page_type = pt;
-
-    $("#record_list").load("/code/records.html?target=" + cv + "&file_type=" + pt, function(){
-        $(".record-item").on("click", function(){
-            show_page($(this).data("url"));
-        }).first().click();
-    });
-}
 var code_editor = null;
-function show_page(url){
+function show_page(){
+    var text = $("#history option:selected").text() || "新文件";
+    var record_key = $("#history").val() || "";
+    var url = "/code/editor.html?customer=" + target_id + "&file_type=" + target_type + "&record_key=" + record_key;
     $("#page_viewer").load(url, function(){
-        var pt =$("input[name='page_type']:checked").val();
+        showNotify("已載入 " + text);
         $('.codemirror').each(function(){
             var editor_id = $(this).attr("id");
             if (editor_id == undefined){
@@ -64,7 +46,7 @@ function show_page(url){
             }
             code_editor = CodeMirror.fromTextArea(document.getElementById(editor_id), {
                 mode: {
-                    name: pt,
+                    name: target_type,
                     version: 2,
                     singleLineStringErrors: false
                 },
@@ -97,39 +79,44 @@ function selectTheme(){
 
 function after_save(data){
     showNotify("已儲存");
-    var cv = $("#target").val();
-    var pts = $("#target option:selected").text();
-    var pt = "html";
-    if (pts.indexOf(".js") > 0){
-        pt = "javascript";
-    }
-    if (pts.indexOf(".css") > 0){
-        pt = "css";
-    }
-    $("#record_list").load("/code/records.html?target=" + cv + "&file_type=" + pt, function(){
-        $(".record-item").on("click", function(){
-            show_page($(this).data("url"));
+    load();
+}
+
+function load(callback){
+    $("#history").html("");
+    json_async("/code/records.html?target=" + target_id + "&content_type=" + target_type, null, function(data){
+        $.map(data.records, function(item, index){
+            var t =  item.modified.isoformat.replace("T", " ").split(".")[0];
+            $("#history").append("<option value='" + item.__key__ + "'>" + item.title + " - " + t + "</option>");
         });
+        if (typeof callback === "function"){
+            callback(data);
+        }
     });
-    //
-    //$.ajax({
-    //    type: 'post',
-    //    url: "https://www.orderplus.com.tw/remote/api_refresh",
-    //    dataType: 'jsonp',
-    //    jsonpCallback: "OrderPlus.message.load"
-    //});
 }
 
 $(function(){
-    $("#target").change(change_view);
-    $("input[name='page_type']").change(change_view);
-
+    target_id = $("body").data("target-id");
+    target_path = $("body").data("path");
+    target_type = "html";
+    if (target_path.indexOf(".js") > 0){
+        target_type = "javascript";
+    }
+    if (target_path.indexOf(".css") > 0){
+        target_type = "css";
+    }
+    load(function(){
+        if ($("#history option").length > 0){
+            $("#history option").eq(0).prop('selected', 'selected');
+            $("#history").change();
+        }else{
+            show_page();
+        }
+    });
+    $("#history").change(show_page);
     $("#btn_1").click(function(e){
         e.preventDefault();
         var d = $("form").serialize();
-        json_async("/code/save.json" , "target=" + target_id + "&file_type=" + last_page_type + "&" + d, after_save, after_save);
-    });
-    $("#customizer.show_record").each(function(){
-        change_view();
+        json_async("/code/save.json" , "target=" + target_id + "&file_type=" + target_type + "&" + d, after_save, after_save);
     });
 });

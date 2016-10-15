@@ -35,8 +35,6 @@ class CodeTarget(Controller):
         for item in self.context["list"]:
             item.name = item.title.split("/")[-1]
 
-
     @route
-    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10001, group=u"開發者工具")
     def admin_code_editor(self):
-        self.context["aaa"] = "aaa"
+        self.context["target_id"] = self.params.get_string("key")
