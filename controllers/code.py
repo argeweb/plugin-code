@@ -136,7 +136,7 @@ class Code(Controller):
     def js_or_css(self, c, target_name, content_type):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
-        target_name, version, is_min, content_type = self.get_params(target_name, "." + content_type)
+        target_name, version, is_min, content_type = self.get_params(target_name, content_type)
         c = CodeTargetModel.get_by_name(target_name)
         if c is None:
             return self.error_and_abort(404)
@@ -154,6 +154,7 @@ class Code(Controller):
         else:
             source = s.source
         self.meta.change_view('render')
+        self.meta.view.template_name = "code/" + content_type + ".html"
         self.context["record"] = {
             "target_name": target_name,
             "source": source,
@@ -176,13 +177,6 @@ class Code(Controller):
             return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
         self.context['data'] = return_dict
 
-    @route_with('/admin/code/plugins_check')
-    def admin_plugins_check(self):
-        self.meta.change_view('jsonp')
-        self.context['data'] = {
-            'status': "enable"
-        }
-
     def get_params(self, target_name, hotfix):
         is_min = False
         if str(target_name).endswith(".min"):
@@ -194,7 +188,7 @@ class Code(Controller):
             target_name = target_name.split("_"+str(version))[0]
         except:
             version = ""
-        target_name = "/" + target_name + hotfix
+        target_name = "/" + target_name + "." + hotfix
         content_type = "javascript" if hotfix == "js" else "css"
         return target_name, str(version), is_min, content_type
 

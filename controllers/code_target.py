@@ -31,8 +31,10 @@ class CodeTarget(Controller):
     @route
     @route_menu(list_name=u"backend", text=u"原始碼管理", sort=10001, group=u"開發者工具")
     def admin_code_manager(self):
-        self.context["aaa"] = "aaa"
-        return scaffold.list(self)
+        self.context["list"] = CodeTargetModel.all()
+        for item in self.context["list"]:
+            item.name = item.title.split("/")[-1]
+
 
     @route
     @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10001, group=u"開發者工具")

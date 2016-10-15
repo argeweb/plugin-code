@@ -1,0 +1,126 @@
+{%- import 'backend/macros.html' as s with context -%}
+{%- extends s.layout() -%}
+{%- block layout_content -%}
+<div class="wrapper wrapper-content">
+    <div class="row">
+        <div class="col-sm-3">
+            <div class="ibox float-e-margins">
+                <div class="ibox-content">
+                    <div class="file-manager">
+                        <h5>顯示：</h5>
+                        <a href="javascript:page['change_type']('all');" class="file-control type-all active">All</a>
+                        <a href="javascript:page['change_type']('html');" class="file-control type-html">Html</a>
+                        <a href="javascript:page['change_type']('javascript');" class="file-control type-javascript">JavaScript</a>
+                        <a href="javascript:page['change_type']('css');" class="file-control type-css">CSS</a>
+
+                        <div class="hr-line-dashed"></div>
+                        <button class="btn btn-primary btn-block">新增文件</button>
+                        <div class="hr-line-dashed"></div>
+                        <h5>虛擬目錄</h5>
+                        <ul class="folder-list" style="padding: 0"></ul>
+                        <div class="clearfix"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-9 animated fadeInRight">
+            <div class="row">
+                <div class="col-sm-12">
+                    {% for item in list %}
+                    <div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="{{ item.title }}" data-content-type="{{ item.content_type }}">
+                        <div class="file">
+                            <a href="{{ this.encode_key(item) }}">
+                                <div class="file-icon {{ item.content_type }}"><span>{{ item.name }}</span></div>
+                                <div class="file-name">
+                                    {{ item.title }}
+                                    <br>
+                                    <small>版本：{{ item.last_version }}</small>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(page){
+        page["current_type"] = "all";
+        page["current_path"] = [];
+        page["paths"] = [{% for item in list %}'{{ item.title }}', {% endfor %}];
+        page["change_dir"] = function(str){
+            var target_dict = page["dir_dict"];
+            if (str == "/"){
+                page["current_path"] = [];
+            }
+            if (str == ".."){
+                page["current_path"].pop();
+            }
+            if (str !== "/" && str !== ".." && str !== "."){
+                page["current_path"].push(str);
+            }
+            var i=0;
+            for (;i<page["current_path"].length;i++){
+                target_dict = target_dict[page["current_path"][i]];
+            }
+            $(".folder-list").html("");
+            if (page["current_path"].length > 0){
+                page["insert_dir"]("..");
+            }
+            $.map(target_dict, function (dir, k) {
+                if (typeof dir === "object") {
+                    page["insert_dir"](k);
+                }
+            });
+            var path_check = page["current_path"].join("/");
+            $(".file-info").hide().each(function(){
+                if ($(this).data("path").startsWith(path_check) || $(this).data("path").startsWith("/" + path_check)){
+                    if ($(this).data("content-type") == page["current_type"]){
+                        $(this).show();
+                    }
+                    if (page["current_type"] == "all"){
+                        $(this).show();
+                    }
+                }
+            });
+        };
+        page["insert_dir"] = function(str){
+            $(".folder-list").append('<li><a href="javascript:page[\'change_dir\'](\'' + str + '\')"><i class="material-icons">folder_open</i><span>' + str + '</span></a></li>');
+        };
+        page["change_type"] = function(str){
+            $(".file-manager .active").removeClass("active");
+            $(".type-"+str).addClass("active");
+            page["current_type"] = str;
+            page["change_dir"](".");
+        };
+
+        var dir_dict = {};
+
+        $.map(page["paths"], function (path) {
+            if (path.startsWith('/')) {
+                path = path.substring(1);
+            }
+            let dirs = path.split("/");
+            let last_dir_dict = dir_dict;
+            $.map(dirs, function (dir) {
+                if (typeof last_dir_dict[dir] === "undefined") {
+                    if (dir.indexOf(".js") > 0 || dir.indexOf(".css") > 0 || dir.indexOf(".html") > 0) {
+                        last_dir_dict[dir] = dir;
+                    } else {
+                        last_dir_dict[dir] = {};
+                    }
+                }
+                if (typeof last_dir_dict[dir] === "object") {
+                    last_dir_dict = last_dir_dict[dir];
+                }
+            });
+        });
+        page["dir_dict"] = dir_dict;
+        page["change_dir"]("/");
+    })(page);
+</script>
+
+{% endblock %}
