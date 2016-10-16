@@ -24,12 +24,12 @@ class CodeTarget(Controller):
     class Scaffold:
         display_properties_in_list = ("title", "content_type", "last_version")
 
-    @route_menu(list_name=u"backend", text=u"Code", sort=10001, group=u"開發者工具")
+    @route_menu(list_name=u"backend", text=u"原始碼管理", sort=10001, group=u"開發者工具")
     def admin_list(self):
         return scaffold.list(self)
 
     @route
-    @route_menu(list_name=u"backend", text=u"原始碼管理", sort=10001, group=u"開發者工具")
+    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10001, group=u"開發者工具")
     def admin_code_manager(self):
         self.context["list"] = CodeTargetModel.all()
         for item in self.context["list"]:

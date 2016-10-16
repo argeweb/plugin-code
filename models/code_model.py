@@ -10,6 +10,7 @@ from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
 from argeweb import Fields
 from code_target_model import CodeTargetModel
+from google.appengine.ext import ndb
 
 
 def get_source(target, code_type, version=None):
@@ -42,3 +43,8 @@ class CodeModel(BasicModel):
             return cls.query(cls.content_type == content_type, cls.target == target.key, cls.version == int(version)).order(-cls.sort).get()
         else:
             return cls.query(cls.content_type == content_type, cls.target == target.key).order(-cls.version).get()
+
+    @classmethod
+    def delete_with_target(cls, target_key):
+        multi_keys = cls.query(cls.target == target_key).fetch(keys_only=True)
+        ndb.delete_multi(multi_keys)

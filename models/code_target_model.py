@@ -11,7 +11,6 @@ from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
-import logging
 
 
 def get_by_name(name):
@@ -36,7 +35,11 @@ class CodeTargetModel(BasicModel):
 
     @classmethod
     def content_type_sort_by_title(cls, content_type):
-        """
-        Queries all posts in the system, regardless of user, ordered by date created descending.
-        """
+        """ get record with content-type and sort by title """
         return cls.query(cls.content_type == content_type).order(cls.title)
+
+    @classmethod
+    def before_delete(cls, key):
+        from code_model import CodeModel
+        CodeModel.delete_with_target(key)
+

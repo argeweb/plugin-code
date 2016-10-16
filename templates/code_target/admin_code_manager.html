@@ -2,8 +2,8 @@
 {%- extends s.layout() -%}
 {%- block layout_content -%}
 <div class="ibox-content m-b-sm border-bottom h116">
-    <div class="p-xs">
-        <h2 id="current_path" style="padding-left: 11px;margin-bottom: 0;"></h2>
+    <div style="padding: 6px 10px;">
+        <h2 id="current_path" style=""></h2>
         <nav class="tab-nav ui-tab tab-nav-brand" style="margin-top: 14px;">
             <ul class="nav nav-list" style="margin-top: -2px !important;">
                 <li class="file-menu"><a data-toggle="tab" href="#" class="type-all active" data-content-type="all">All</a></li>
@@ -100,7 +100,7 @@
             $(".folder-list").append('<li><a href="javascript:page[\'change_dir\'](\'' + str + '\')"><i class="material-icons">folder_open</i><span>' + str + '</span></a></li>');
         };
         page["change_type"] = function(str){
-            $(".p-xs .active").removeClass("active");
+            $(".file-menu.active, .file-menu .active").removeClass("active");
             $(".type-"+str).addClass("active").parent().addClass("active");
             page["current_type"] = str;
             page["change_dir"](".");
@@ -132,7 +132,7 @@
             }else{
                 page["change_dir"]("/");
             }
-        }
+        };
 
         $.map(page["paths"], function (path) {
             page["insert_path"](path);
