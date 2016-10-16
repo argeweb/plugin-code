@@ -1,3 +1,12 @@
+@media (max-width: 767px){
+    body {
+        word-wrap: break-word;
+        -webkit-hyphens: auto;
+        -ms-hyphens: auto;
+        -moz-hyphens: auto;
+        hyphens: auto;
+    }
+}
 h1, h2, h3, h4, h5, h6 {
     margin: 0 0 15px;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -9,7 +18,54 @@ h1, h2, h3, h4, h5, h6 {
 body, h1, h2, h3, h4, h5, h6, .uk-navbar-nav > li > a {
     font-family: "ProximaNovaLight", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
-
+.uk-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.uk-grid>[class*=uk-width-] {
+    margin: 0;
+    padding-left: 25px;
+    float: left;
+}
+.uk-form input[type=color], .uk-form input[type=date], .uk-form input[type=datetime-local], .uk-form input[type=datetime], .uk-form input[type=email], .uk-form input[type=month], .uk-form input[type=number], .uk-form input[type=password], .uk-form input[type=search], .uk-form input[type=tel], .uk-form input[type=text], .uk-form input[type=time], .uk-form input[type=url], .uk-form input[type=week], .uk-form select, .uk-form textarea {
+    height: 30px;
+    max-width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #444;
+    -webkit-transition: all linear .2s;
+    transition: all linear .2s;
+}
+.uk-width-3-4 {
+    width: 75%;
+}
+.uk-width-1-4 {
+    width: 25%;
+}
+.uk-button {
+    display: inline-block;
+    min-height: 30px;
+    padding: 0 9pt;
+    border: none;
+    background: #eee;
+    line-height: 30px;
+    color: #444;
+    letter-spacing: normal;
+}
+.uk-button-primary {
+    background-color: #00a8e6;
+    color: #fff;
+}
+.uk-text-center {
+    text-align: center!important;
+}
+a.uk-button {
+    box-sizing: border-box;
+    vertical-align: middle;
+    text-decoration: none;
+}
 /* Customizer
  ========================================================================== */
 
@@ -41,6 +97,7 @@ body, h1, h2, h3, h4, h5, h6, .uk-navbar-nav > li > a {
     height: 40px;
     padding: 20px 30px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: #fff;
 }
 
 .cm-sidebar-content {

@@ -28,7 +28,7 @@ var target_path = "";
 var target_type = "";
 
 function showNotify(msg){
-    $.UIkit.notify(msg, {pos:'bottom-right'});
+    top.message.quick_info(msg);
 }
 
 var code_editor = null;
@@ -44,15 +44,16 @@ function show_page(){
                 editor_id = $(this).attr("name");
                 $(this).attr("id", editor_id);
             }
+            var mode = target_type;
+            if (target_type == "html"){
+                mode = "text/html"
+            }
             code_editor = CodeMirror.fromTextArea(document.getElementById(editor_id), {
-                mode: {
-                    name: target_type,
-                    version: 2,
-                    singleLineStringErrors: false
-                },
+                mode: mode,
                 lineNumbers: true,
                 indentUnit: 4,
                 matchBrackets: true,
+                foldGutter: true,
                 autofocus: true,
                 extraKeys: {
                     "Ctrl-S": function(cm){
