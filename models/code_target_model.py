@@ -21,7 +21,7 @@ class CodeTargetModel(BasicModel):
     class Meta:
         behaviors = (Searchable,)
         label_name = {
-            "title": u"目標名稱",
+            "title": u"Path",
             "content_type": u"ContentType",
             "last_version": u"Version",
         }

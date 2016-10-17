@@ -9,7 +9,8 @@
 import datetime
 from time import time
 from argeweb import auth, add_authorizations
-from argeweb import Controller, scaffold, route_menu, Fields, route_with
+from argeweb import Controller, scaffold, Fields
+from argeweb import route_with, route_menu, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from ..models.code_target_model import CodeTargetModel
@@ -63,12 +64,7 @@ class Code(Controller):
             "html": html
         }
 
-    @route_with('/code/welcome.html')
-    @add_authorizations(auth.require_admin)
-    def welcome(self):
-        pass
-
-    @route_with('/code/records.html')
+    @route_with('/code/records')
     @add_authorizations(auth.require_admin)
     def records(self):
         target = self.params.get_ndb_record("target")
@@ -80,7 +76,7 @@ class Code(Controller):
             'records': records.fetch(15)
         }
 
-    @route_with('/code/editor.html')
+    @route
     @add_authorizations(auth.require_admin)
     def editor(self):
         self.context["target"] = self.params.get_string("target")

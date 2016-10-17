@@ -29,7 +29,7 @@ class CodeTarget(Controller):
         return scaffold.list(self)
 
     @route
-    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10001, group=u"開發者工具")
+    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10002, group=u"開發者工具")
     def admin_code_manager(self):
         self.context["list"] = CodeTargetModel.all()
         for item in self.context["list"]:

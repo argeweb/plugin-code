@@ -35,7 +35,7 @@ var code_editor = null;
 function show_page(){
     var text = $("#history option:selected").text() || "新文件";
     var record_key = $("#history").val() || "";
-    var url = "/code/editor.html?customer=" + target_id + "&file_type=" + target_type + "&record_key=" + record_key;
+    var url = "/code/editor?customer=" + target_id + "&file_type=" + target_type + "&record_key=" + record_key;
     $("#page_viewer").load(url, function(){
         showNotify("已載入 " + text);
         $('.codemirror').each(function(){
@@ -85,7 +85,7 @@ function after_save(data){
 
 function load(callback){
     $("#history").html("");
-    json_async("/code/records.html?target=" + target_id + "&content_type=" + target_type, null, function(data){
+    json_async("/code/records?target=" + target_id + "&content_type=" + target_type, null, function(data){
         $.map(data.records, function(item, index){
             var t =  item.modified.isoformat.replace("T", " ").split(".")[0];
             $("#history").append("<option value='" + item.__key__ + "'>" + item.title + " - " + t + "</option>");

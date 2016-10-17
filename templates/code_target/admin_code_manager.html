@@ -75,6 +75,16 @@
                 target_dict = target_dict[page["current_path"][i]];
                 $("#current_path").append("<span class='btn btn-flat'>"+page["current_path"][i]+"</span>");
             }
+            $("#current_path .btn").click(function(){
+                var index = $(this).index("#current_path .btn");
+                var c = page["current_path"];
+                page["current_path"] = [];
+                var i = 0;
+                for (;i<index;i++){
+                    page["current_path"].push(c[i]);
+                }
+                page["change_dir"](".");
+            });
             $(".folder-list").html("");
             if (page["current_path"].length > 0){
                 page["insert_dir"]("..");
