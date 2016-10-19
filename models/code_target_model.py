@@ -13,8 +13,8 @@ from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
 
 
-def get_by_name(name):
-    return CodeTargetModel.get_by_name(name)
+def get_target(name):
+    return CodeTargetModel.find_by_title(name)
 
 
 class CodeTargetModel(BasicModel):
@@ -28,10 +28,6 @@ class CodeTargetModel(BasicModel):
     title = Fields.StringProperty(default=u"未命名")
     content_type = Fields.StringProperty()
     last_version = Fields.IntegerProperty(default=0)
-
-    @classmethod
-    def get_by_name(cls, name):
-        return cls.query(cls.title==name).get()
 
     @classmethod
     def content_type_sort_by_title(cls, content_type):

@@ -22,14 +22,14 @@ class Code(Controller):
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
 
-    @route_with('/code/')
+    @route
     @add_authorizations(auth.require_admin)
-    def index(self):
+    def admin_index(self):
         self.context["target"] = self.params.get_ndb_record("key")
 
-    @route_with('/code/create')
+    @route
     @add_authorizations(auth.require_admin)
-    def create(self):
+    def admin_create(self):
         target_name = self.params.get_string("path")
         content_type = ""
         if target_name.startswith("/") is False:
@@ -41,7 +41,7 @@ class Code(Controller):
             content_type = "html"
         if target_name.endswith(".js") is True:
             content_type = "javascript"
-        n = CodeTargetModel.get_by_name(target_name)
+        n = CodeTargetModel.find_by_title(target_name)
         info = "error"
         msg = u"檔案已存在"
         html = u""
@@ -64,9 +64,9 @@ class Code(Controller):
             "html": html
         }
 
-    @route_with('/code/records')
+    @route
     @add_authorizations(auth.require_admin)
-    def records(self):
+    def admin_records(self):
         target = self.params.get_ndb_record("target")
         content_type = self.params.get_string("content_type")
         records = CodeModel.all_with_target(target, content_type)
@@ -84,9 +84,10 @@ class Code(Controller):
         self.context["record_key"] = self.params.get_string("record_key")
         self.context["record"] = self.params.get_ndb_record("record_key")
 
-    @route_with('/code/save.json')
+    @route
+    @route_menu(list_name=u"backend", text=u"test", sort=10002)
     @add_authorizations(auth.require_admin)
-    def save_json(self):
+    def admin_save(self):
         self.meta.change_view("json")
         code = self.params.get_string("code")
         target = self.params.get_ndb_record("target")
@@ -121,7 +122,7 @@ class Code(Controller):
         self.meta.change_view('jsonp')
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-        target = CodeTargetModel.get_by_name(target_name)
+        target = CodeTargetModel.find_by_title(target_name)
         self.context['data'] = {
             'content': target.title,
             'js-version': target.js_version,
@@ -133,7 +134,7 @@ class Code(Controller):
     @route_with(template='/<:(assets|code)>/<:(.*)>.html')
     def html(self, c, target_name, version=None):
         target_name, version, is_min = self.get_params(target_name, ".html")
-        c = CodeTargetModel.get_by_name(target_name)
+        c = CodeTargetModel.find_by_title(target_name)
         if version is None:
             version = str(c.html_version)
         s = CodeModel.get_source(target=c, content_type="html", version=version)
@@ -150,7 +151,7 @@ class Code(Controller):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
         target_name, version, is_min, content_type = self.get_params(target_name, content_type)
-        c = CodeTargetModel.get_by_name(target_name)
+        c = CodeTargetModel.find_by_title(target_name)
         if c is None:
             return self.error_and_abort(404)
         version = str(c.last_version) if version is "" else version
@@ -182,11 +183,11 @@ class Code(Controller):
         return_dict = {}
         js_file_name = self.params.get_string("js", u"api,channel").split(",")
         for item in js_file_name:
-            js = CodeTargetModel.get_by_name(item)
+            js = CodeTargetModel.find_by_title(item)
             return_dict["js-%s-%s" % (item, js.js_version)] = "/code/%s_%s.js" % (item, js.js_version)
         css_file_name = self.params.get_string("css", u"mini").split(",")
         for item in css_file_name:
-            css = CodeTargetModel.get_by_name(item)
+            css = CodeTargetModel.find_by_title(item)
             return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
         self.context['data'] = return_dict
 

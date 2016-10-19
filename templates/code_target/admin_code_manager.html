@@ -160,7 +160,7 @@
                 showLoaderOnConfirm: true,
                 preConfirm: function (path) {
                     return new Promise(function (resolve, reject) {
-                        json_async("/code/create?path="+path, null, function(data){
+                        json_async("/admin/code/create?path="+path, null, function(data){
                             if (data.info == "done"){
                                 resolve(data)
                             }else{

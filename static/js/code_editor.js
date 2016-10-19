@@ -85,7 +85,7 @@ function after_save(data){
 
 function load(callback){
     $("#history").html("");
-    json_async("/code/records?target=" + target_id + "&content_type=" + target_type, null, function(data){
+    json_async("/admin/code/records?target=" + target_id + "&content_type=" + target_type, null, function(data){
         $.map(data.records, function(item, index){
             var t =  item.modified.isoformat.replace("T", " ").split(".")[0];
             $("#history").append("<option value='" + item.__key__ + "'>" + item.title + " - " + t + "</option>");
@@ -118,6 +118,6 @@ $(function(){
     $("#btn_1").click(function(e){
         e.preventDefault();
         var d = $("form").serialize();
-        json_async("/code/save.json" , "target=" + target_id + "&file_type=" + target_type + "&" + d, after_save, after_save);
+        json_async("/admin/code/save" , "target=" + target_id + "&file_type=" + target_type + "&" + d, after_save, after_save);
     });
 });
