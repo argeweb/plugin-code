@@ -69,7 +69,7 @@
             if (str !== "/" && str !== ".." && str !== "."){
                 page["current_path"].push(str);
             }
-            $("#current_path").html("<span>目前位置 :</span><span class='btn btn-flat' data-path='/'>assest</span>");
+            $("#current_path").html("<span>目前位置 :</span><span class='btn btn-flat' data-path='/'>assets</span>");
             var i=0;
             for (;i<page["current_path"].length;i++){
                 target_dict = target_dict[page["current_path"][i]];
