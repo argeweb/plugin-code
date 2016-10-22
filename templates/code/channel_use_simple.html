@@ -1,0 +1,14 @@
+<script src="/assets/js/common.js"></script>
+<script type="text/javascript" src="/_ah/channel/jsapi"></script>
+<script type="text/javascript" src="/code/channel"></script>
+<script>$(function () {
+    if (typeof ArGeWebChannel != "undefined") {
+        ArGeWebChannel.init($, {
+            "after_connection": function (msg) {
+                console.log("connection")
+            }, "parse_message": function (msg) {
+                console.log(msg)
+            }
+        })
+    }
+});</script>
