@@ -5,7 +5,7 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/3/3
-
+import random
 from time import time
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold, Fields
@@ -16,6 +16,10 @@ from ..models.code_target_model import CodeTargetModel
 from ..models.code_model import CodeModel
 from google.appengine.api import channel
 from argeweb.core import json_util
+
+
+def crete_channel_token(target, timeout=480):
+    return channel.create_channel(target, timeout)
 
 
 def send_message_to_client(client_id, data):
@@ -29,12 +33,19 @@ class Code(Controller):
         pagination_limit = 10
 
     @route
-    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10002)
     def channel(self):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
-        self.response.headers["ETag"] = self.request.path_url
+        client_id = None
+        if "client_id" in self.session:
+            client_id = self.session["client_id"]
+        if client_id is None:
+            rnd = ''.join([str(random.randint(100, 999)) for x in range(0, 10)])
+            client_id = rnd[11:16] + rnd[21:26]
+            self.session["client_id"] = client_id
+        self.response.headers["ETag"] = self.request.path_url + "_" + client_id
         self.context["remote"] = self.request.path_url
+        self.context["token"] = crete_channel_token(client_id)
 
     @route
     @add_authorizations(auth.require_admin)
@@ -91,13 +102,6 @@ class Code(Controller):
         }
 
     @route
-    def admin_code_refresh(self):
-        self.meta.change_view("jsonp")
-        send_message_to_client(self.session["client_id"], {
-            "action": "api_refresh", "status": "success", "client": self.session["client_id"]
-        })
-
-    @route
     @add_authorizations(auth.require_admin)
     def editor(self):
         self.context["target"] = self.params.get_string("target")
@@ -135,6 +139,9 @@ class Code(Controller):
         n.target = target.key
         n.put()
         self.context["data"] = {"info": "done"}
+        send_message_to_client(self.session["client_id"], {
+            "action": "code_refresh", "status": "success", "client": self.session["client_id"]
+        })
 
     @route_with('/code/<target_name>_info.json')
     def info(self, target_name):

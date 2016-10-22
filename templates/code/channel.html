@@ -2,6 +2,7 @@
 (function () {
     var $ = null;
     var remote = "{{ remote }}";
+    var token = "{{ token }}";
     var client_callback = {
         "after_connection": null,
         "parse_message": null
@@ -63,14 +64,8 @@
             socket.onclose = client.onclose;
             client.socket =  socket;
         },
-        "connection": function (token) {
-            remote_json("/get_client_token", function(data) {
-                if (data) {
-                    if (data.token)  client.create_channel(data.token);
-                    if (data.client)  client.client_id = data.client;
-                    if (typeof client_callback.after_connection === "function") client_callback.after_connection(data);
-                }
-            });
+        "connection": function () {
+            client.create_channel(token);
         },
         "close": function(){
             if (client.socket != null){
@@ -80,9 +75,10 @@
         },
         "onopen": function () {
             console.log(":--------------------");
+            if (typeof client_callback.after_connection === "function") client_callback.after_connection();
         },
-        "onerror": function () {
-            client.connection();
+        "onerror": function (err) {
+            console.log(err);
         },
         "onmessage": function (msg) {
             window.debug_message = msg;
