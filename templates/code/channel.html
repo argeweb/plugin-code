@@ -1,0 +1,122 @@
+// ArGeWebChannel
+(function () {
+    var $ = null;
+    var remote = "{{ remote }}";
+    var client_callback = {
+        "after_connection": null,
+        "parse_message": null
+    };
+
+    // 發送資料
+    function remote_post(url, data, callback, error_callback) {
+        var post_data = data || {};
+        remote_json("/get_post_token", function(data){
+            post_data["token"] = data.token;
+            console.log(data);
+            $.ajax({
+                type: 'post',
+                url: remote + url,
+                dataType: 'json',
+                data: post_data
+            }).done(function (data) {
+                console.log(data);
+                if (callback) {
+                    callback(data);
+                }
+            }).fail(function (data) {
+                if (error_callback) {
+                    error_callback(data);
+                }
+            });
+        });
+    }
+    // 取得資料
+    function remote_json(url, callback, jsonpCallback) {
+        jsonpCallback = jsonpCallback || "callback";
+        $.ajax({
+            type: 'post',
+            url: remote + url,
+            dataType: "jsonp",
+            jsonpCallback: jsonpCallback,
+            context: document.body
+        }).done(function (data) {
+            if (typeof callback === "function"){
+                callback(data);
+            }
+        }).fail(function (data) {
+            console.log(data);
+        });
+    }
+
+    var client = {
+        "client_id": "",
+        "socket": null,
+        "create_channel": function(token){
+            var channel = new goog.appengine.Channel(token);
+            var socket = channel.open();
+            socket.onopen = client.onopen;
+            socket.onerror = client.onerror;
+            socket.onmessage = function(data){
+                eval('var a = ' + data.data);
+                client.onmessage(a);
+            };
+            socket.onclose = client.onclose;
+            client.socket =  socket;
+        },
+        "connection": function (token) {
+            remote_json("/get_client_token", function(data) {
+                if (data) {
+                    if (data.token)  client.create_channel(data.token);
+                    if (data.client)  client.client_id = data.client;
+                    if (typeof client_callback.after_connection === "function") client_callback.after_connection(data);
+                }
+            });
+        },
+        "close": function(){
+            if (client.socket != null){
+                client.socket.close();
+                client.socket = null;
+            }
+        },
+        "onopen": function () {
+            console.log(":--------------------");
+        },
+        "onerror": function () {
+            client.connection();
+        },
+        "onmessage": function (msg) {
+            window.debug_message = msg;
+            if (msg.action=="code_refresh" && msg.status=="success"){
+                location.reload();
+            }
+            if (typeof client_callback.parse_message === "function"){
+                client_callback.parse_message(msg);
+            }
+        },
+        "onclose": function () {
+            console.log(":--------------------:");
+        }
+    };
+
+    window.ArGeWebChannel = {
+        "init": function(jQuery, config){
+            $ = jQuery;
+            config = config || {};
+            $.each(config, function(key, value) {
+                if ($.isFunction(value) == true && key in client_callback){
+                    client_callback[key] = value;
+                }
+            });
+            if (typeof config["remote"] !== "undefined"){
+                remote = config["remote"];
+            }
+            client.connection();
+            return {
+                "get_data": remote_json,
+                "send_data": remote_post
+            };
+            window["ArGeWebChannel"] = undefined;
+        }
+    };
+    Object.freeze(window.ArGeWebChannel);
+})();

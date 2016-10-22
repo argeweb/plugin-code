@@ -7,6 +7,7 @@
 # Date: 2015/3/3
 
 import datetime
+import random
 from time import time
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
@@ -31,6 +32,13 @@ class CodeTarget(Controller):
     @route
     @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10002, group=u"開發者工具")
     def admin_code_manager(self):
+        client_id = None
+        if "client_id" in self.session:
+            client_id = self.session["client_id"]
+        if client_id is None:
+            rnd = ''.join([str(random.randint(100, 999)) for x in range(0, 10)])
+            client_id = rnd[11:16] + rnd[21:26]
+            self.session["client_id"] = client_id
         self.context["list"] = CodeTargetModel.all()
         for item in self.context["list"]:
             item.name = item.title.split("/")[-1]

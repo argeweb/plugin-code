@@ -6,7 +6,6 @@
 # Web: http://www.yooliang.com/
 # Date: 2015/3/3
 
-import datetime
 from time import time
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold, Fields
@@ -15,12 +14,27 @@ from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from ..models.code_target_model import CodeTargetModel
 from ..models.code_model import CodeModel
+from google.appengine.api import channel
+from argeweb.core import json_util
+
+
+def send_message_to_client(client_id, data):
+    result = unicode(json_util.stringify(data))
+    channel.send_message(client_id, result)
 
 
 class Code(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
+
+    @route
+    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=10002)
+    def channel(self):
+        if self.request.headers.get('If-None-Match'):
+            return self.abort(304)
+        self.response.headers["ETag"] = self.request.path_url
+        self.context["remote"] = self.request.path_url
 
     @route
     @add_authorizations(auth.require_admin)
@@ -77,6 +91,13 @@ class Code(Controller):
         }
 
     @route
+    def admin_code_refresh(self):
+        self.meta.change_view("jsonp")
+        send_message_to_client(self.session["client_id"], {
+            "action": "api_refresh", "status": "success", "client": self.session["client_id"]
+        })
+
+    @route
     @add_authorizations(auth.require_admin)
     def editor(self):
         self.context["target"] = self.params.get_string("target")
@@ -85,7 +106,6 @@ class Code(Controller):
         self.context["record"] = self.params.get_ndb_record("record_key")
 
     @route
-    @route_menu(list_name=u"backend", text=u"test", sort=10002)
     @add_authorizations(auth.require_admin)
     def admin_save(self):
         self.meta.change_view("json")
