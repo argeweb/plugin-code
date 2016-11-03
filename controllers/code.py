@@ -7,14 +7,16 @@
 # Date: 2015/3/3
 import random
 from time import time
+
+from google.appengine.api import channel
+
 from argeweb import auth, add_authorizations
-from argeweb import Controller, scaffold, Fields
-from argeweb import route_with, route_menu, route
+from argeweb import Controller, scaffold
+from argeweb import route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from ..models.code_target_model import CodeTargetModel
 from ..models.code_model import CodeModel
-from google.appengine.api import channel
 from argeweb.core import json_util
 
 
@@ -234,11 +236,11 @@ class Code(Controller):
         return target_name, str(version), is_min, content_type
 
     def mini_js(self, js):
-        from jsmin import jsmin
+        from ..libs.jsmin import jsmin
         return jsmin(js)
 
     def mini_css(self, css):
-        import sys, re
+        import re
         # remove comments - this will break a lot of hacks :-P
         css = re.sub(r'\s*/\*\s*\*/', "$$HACK1$$", css)  # preserve IE<6 comment hack
         css = re.sub(r'/\*[\s\S]*?\*/', "", css)
