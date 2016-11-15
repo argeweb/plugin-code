@@ -39,3 +39,14 @@ class CodeTargetModel(BasicModel):
         from code_model import CodeModel
         CodeModel.delete_with_target(key)
 
+    @classmethod
+    def get_or_create(cls, path, content_type):
+        n = cls.find_by_title(path)
+        if n is None:
+            n = cls()
+            n.title = path
+            n.content_type = content_type
+            n.put()
+        return n
+
+

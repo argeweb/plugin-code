@@ -34,6 +34,20 @@ class Code(Controller):
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
 
+    @staticmethod
+    def process_path(path):
+        content_type = ""
+        if path.startswith("/") is False:
+            path = "/" + path
+        path = path.replace("/assets", "")
+        if path.endswith(".css") is True:
+            content_type = "css"
+        if path.endswith(".html") is True:
+            content_type = "html"
+        if path.endswith(".js") is True:
+            content_type = "javascript"
+        return path, content_type
+
     @route
     def channel(self):
         if self.request.headers.get('If-None-Match'):
@@ -57,17 +71,7 @@ class Code(Controller):
     @route
     @add_authorizations(auth.require_admin)
     def admin_create(self):
-        target_name = self.params.get_string("path")
-        content_type = ""
-        if target_name.startswith("/") is False:
-            target_name = "/" + target_name
-        target_name = target_name.replace("/assets", "")
-        if target_name.endswith(".css") is True:
-            content_type = "css"
-        if target_name.endswith(".html") is True:
-            content_type = "html"
-        if target_name.endswith(".js") is True:
-            content_type = "javascript"
+        target_name, content_type = self.process_path(self.params.get_string("path"))
         n = CodeTargetModel.find_by_title(target_name)
         info = "error"
         msg = u"檔案已存在"
@@ -141,9 +145,42 @@ class Code(Controller):
         n.target = target.key
         n.put()
         self.context["data"] = {"info": "done"}
-        send_message_to_client(self.session["client_id"], {
-            "action": "code_refresh", "status": "success", "client": self.session["client_id"]
-        })
+        if "client_id" in self.session:
+            send_message_to_client(self.session["client_id"], {
+                "action": "code_refresh", "status": "success", "client": self.session["client_id"]
+            })
+
+    @route
+    @add_authorizations(auth.require_admin)
+    def admin_upload(self):
+        self.meta.change_view("json")
+        target_name, content_type = self.process_path(self.params.get_string("path"))
+        code = self.params.get_string("code")
+        target = CodeTargetModel.get_or_create(target_name, content_type)
+        version = int(time()) - 1460000000
+        target.last_version = version
+        target.content_type = content_type
+        if content_type == "javascript":
+            source_minify = self.mini_js(code)
+        elif content_type == "css":
+            source_minify = self.mini_css(code)
+        elif content_type == "html":
+            source_minify = u""
+        else:
+            self.context["data"] = {"error": "Wrong File Type"}
+            return
+        target.put()
+        n = CodeModel()
+        n.title = u" 版本 " + str(version)
+        n.source = code
+        n.source_mini = source_minify
+        n.version = version
+        n.content_type = content_type
+        n.target = target.key
+        n.put()
+        self.context["data"] = {"info": "done"}
+
+
 
     @route_with('/code/<target_name>_info.json')
     def info(self, target_name):
