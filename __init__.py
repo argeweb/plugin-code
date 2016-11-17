@@ -5,6 +5,8 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
+import webapp2
+from google.appengine.ext import webapp
 
 plugins_helper = {
     "title": u"線上編輯原始碼",
@@ -24,3 +26,84 @@ plugins_helper = {
         }
     }
 }
+
+def get_theme():
+    import os
+    from argeweb.core import settings
+    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
+        paths = "_".join(os.path.dirname(os.path.abspath(__file__)).split("\\")[1:-1])
+        paths = paths.replace("plugins", "argeweb")
+        server_name = os.environ["SERVER_NAME"] + "@" + paths.lower()
+    else:
+        server_name = os.environ["SERVER_NAME"]
+    host_information, namespace, theme = settings.get_host_information_item(server_name)
+    return theme, namespace
+
+def get_params(target_name, hotfix):
+    is_min = False
+    if str(target_name).endswith(".min"):
+        is_min = True
+        target_name = target_name.split(".min")[0]
+    try:
+        version = target_name.split("/")[-1].split("_")[-1].split(".")[0]
+        version = int(version)
+        target_name = target_name.split("_"+str(version))[0]
+    except:
+        version = ""
+    target_name = "/" + target_name + "." + hotfix
+    content_type = "javascript" if hotfix == "js" else "css"
+    return target_name, str(version), is_min, content_type
+
+
+class GetFileHandler(webapp2.RequestHandler):
+    def get(self, target_name):
+        content_type = None
+        c = target_name.startswith("/code") and "code" or "assets"
+        if target_name.endswith(".js"):
+            content_type = "js"
+        if target_name.endswith(".css"):
+            content_type = "css"
+        target_name = target_name.replace("/" + c, "").replace("." + content_type, "")
+        from models.code_target_model import CodeTargetModel
+        from google.appengine.api import namespace_manager
+        if content_type is None:
+            content_type, target_name, c = target_name, c, "assets"
+        theme, namespace = get_theme()
+        namespace_manager.set_namespace(namespace)
+        target_name, version, is_min, content_type = get_params(target_name, content_type)
+        if target_name.startswith(u"/themes/%s" % theme) is False:
+            target_name = u"/themes/%s%s" % (theme, target_name)
+        if self.request.headers.get('If-None-Match'):
+            match = self.request.headers.get('If-None-Match').split("||")
+            if u"" + match[0] == target_name and u"" + match[-1] == theme:
+                return self.abort(304)
+        c = CodeTargetModel.find_by_title(target_name)
+        if c is None:
+            return self.abort(404)
+        version = str(c.last_version) if version is "" else version
+        etag = str(target_name) + "||" + version + "||" + str(theme)
+        if self.request.headers.get('If-None-Match') == etag:
+            return self.abort(304)
+        self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
+        self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
+        self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
+        self.response.headers['Content-Type'] = 'text/' + content_type
+        self.response.headers["ETag"] = etag
+        from models.code_model import CodeModel
+        s = CodeModel.get_source(target=c, content_type=content_type, version=version)
+        if s is None:
+            return self.abort(404)
+        if is_min is True:
+            source = s.source_mini
+        else:
+            source = s.source
+        self.response.out.write(source)
+        # self.meta.change_view('render')
+        # self.meta.view.template_name = "code/" + content_type + ".html"
+        # self.context["record"] = {
+        #     "target_name": target_name,
+        #     "source": source,
+        #     "version": version
+        # }
+
+getfile_app = webapp.WSGIApplication([('/([^/]+)?', GetFileHandler)],debug=False)

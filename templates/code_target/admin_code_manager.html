@@ -96,7 +96,9 @@
             });
             var path_check = page["current_path"].join("/");
             $(".file-info").hide().each(function(){
-                if ($(this).data("path").startsWith(path_check) || $(this).data("path").startsWith("/" + path_check)){
+                var this_path = $(this).data("path");
+                if ((this_path.startsWith(path_check) || this_path.startsWith("/" + path_check) &&
+                        this_path.replace(path_check, "").replace("//", "/").indexOf("/", 1) < 0 )){
                     if ($(this).data("content-type") == page["current_type"]){
                         $(this).show();
                     }

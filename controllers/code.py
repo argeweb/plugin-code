@@ -123,6 +123,16 @@ class Code(Controller):
         target = self.params.get_ndb_record("target")
         content_type = self.params.get_string("file_type")
         version = int(time()) - 1460000000
+        import hashlib
+        try:
+            m2 = hashlib.md5()
+            m2.update(code)
+            last_md5 = m2.hexdigest()
+        except:
+            last_md5 = str(time())
+        if last_md5 == target.last_md5:
+            self.context["data"] = {"error": "No need to change"}
+            return
         target.last_version = version
         target.content_type = content_type
         if content_type == "javascript":
@@ -134,6 +144,7 @@ class Code(Controller):
         else:
             self.context["data"] = {"error": "Wrong File Type"}
             return
+        target.last_md5 = last_md5
         target.put()
 
         n = CodeModel()
@@ -152,11 +163,29 @@ class Code(Controller):
 
     @route
     @add_authorizations(auth.require_admin)
+    def admin_check(self):
+        self.meta.change_view("json")
+        target_name, content_type = self.process_path(self.params.get_string("path"))
+        target = CodeTargetModel.get_or_create(target_name, content_type)
+        self.context["data"] = {"send": self.params.get_string("check_md5") == target.last_md5 and "false" or "true"}
+
+    @route
+    @add_authorizations(auth.require_admin)
     def admin_upload(self):
         self.meta.change_view("json")
         target_name, content_type = self.process_path(self.params.get_string("path"))
         code = self.params.get_string("code")
+        import hashlib
+        try:
+            m2 = hashlib.md5()
+            m2.update(code)
+            last_md5 = m2.hexdigest()
+        except:
+            last_md5 = self.params.get_string("check_md5")
         target = CodeTargetModel.get_or_create(target_name, content_type)
+        if last_md5 == target.last_md5:
+            self.context["data"] = {"error": "No need to change"}
+            return
         version = int(time()) - 1460000000
         target.last_version = version
         target.content_type = content_type
@@ -169,6 +198,7 @@ class Code(Controller):
         else:
             self.context["data"] = {"error": "Wrong File Type"}
             return
+        target.last_md5 = last_md5
         target.put()
         n = CodeModel()
         n.title = u" 版本 " + str(version)
@@ -179,8 +209,6 @@ class Code(Controller):
         n.target = target.key
         n.put()
         self.context["data"] = {"info": "done"}
-
-
 
     @route_with('/code/<target_name>_info.json')
     def info(self, target_name):
@@ -210,35 +238,6 @@ class Code(Controller):
         self.context["record"] = {
             "source": s.source,
             "version": s.version
-        }
-
-    @route_with(template='/<:(assets|code)>/<:(.*)>.<:(js|css)>')
-    def js_or_css(self, c, target_name, content_type):
-        if self.request.headers.get('If-None-Match'):
-            return self.abort(304)
-        target_name, version, is_min, content_type = self.get_params(target_name, content_type)
-        c = CodeTargetModel.find_by_title(target_name)
-        if c is None:
-            return self.error_and_abort(404)
-        version = str(c.last_version) if version is "" else version
-        self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
-        self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-        self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
-        self.response.headers['Content-Type'] = 'text/' + content_type
-        self.response.headers["ETag"] = str(target_name) + "_" + version
-        s = CodeModel.get_source(target=c, content_type=content_type, version=version)
-        if s is None:
-            return self.error_and_abort(404)
-        if is_min is True:
-            source = s.source_mini
-        else:
-            source = s.source
-        self.meta.change_view('render')
-        self.meta.view.template_name = "code/" + content_type + ".html"
-        self.context["record"] = {
-            "target_name": target_name,
-            "source": source,
-            "version": version
         }
 
     @route_with('/code/version.json')

@@ -1,0 +1,3 @@
+handlers:
+- url: /(.+\.(js|css))$
+  script: plugins.code.getfile_app

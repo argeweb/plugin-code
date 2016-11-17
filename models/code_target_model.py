@@ -28,6 +28,7 @@ class CodeTargetModel(BasicModel):
     title = Fields.StringProperty(default=u"未命名")
     content_type = Fields.StringProperty()
     last_version = Fields.IntegerProperty(default=0)
+    last_md5 = Fields.StringProperty()
 
     @classmethod
     def content_type_sort_by_title(cls, content_type):
