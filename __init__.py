@@ -7,12 +7,13 @@
 # Date: 2015/7/12.
 import webapp2
 from google.appengine.ext import webapp
+from argeweb.core import settings
 
 plugins_helper = {
     "title": u"線上編輯原始碼",
     "desc": u"可以以動態的方式進行程式碼編輯",
     "controllers": {
-        "code_target": {
+        "code": {
             "group": u"原始碼",
             "actions": [
                 {"action": "code_manager", "name": u"線上編輯器"},
@@ -27,19 +28,8 @@ plugins_helper = {
     }
 }
 
-def get_theme():
-    import os
-    from argeweb.core import settings
-    if os.environ.get('SERVER_SOFTWARE', '').startswith('Dev'):
-        paths = "_".join(os.path.dirname(os.path.abspath(__file__)).split("\\")[1:-1])
-        paths = paths.replace("plugins", "argeweb")
-        server_name = os.environ["SERVER_NAME"] + "@" + paths.lower()
-    else:
-        server_name = os.environ["SERVER_NAME"]
-    host_information, namespace, theme = settings.get_host_information_item(server_name)
-    return theme, namespace
 
-def get_params(target_name, hotfix):
+def get_params_from_file_name(target_name, hotfix):
     is_min = False
     if str(target_name).endswith(".min"):
         is_min = True
@@ -64,20 +54,21 @@ class GetFileHandler(webapp2.RequestHandler):
         if target_name.endswith(".css"):
             content_type = "css"
         target_name = target_name.replace("/" + c, "").replace("." + content_type, "")
-        from models.code_target_model import CodeTargetModel
+        from plugins.file.models.file_model import FileModel
         from google.appengine.api import namespace_manager
         if content_type is None:
             content_type, target_name, c = target_name, c, "assets"
-        theme, namespace = get_theme()
+
+        host_information, namespace, theme = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
-        target_name, version, is_min, content_type = get_params(target_name, content_type)
+        target_name, version, is_min, content_type = get_params_from_file_name(target_name, content_type)
         if target_name.startswith(u"/themes/%s" % theme) is False:
             target_name = u"/themes/%s%s" % (theme, target_name)
         if self.request.headers.get('If-None-Match'):
             match = self.request.headers.get('If-None-Match').split("||")
             if u"" + match[0] == target_name and u"" + match[-1] == theme:
                 return self.abort(304)
-        c = CodeTargetModel.find_by_title(target_name)
+        c = FileModel.get_by_path(target_name)
         if c is None:
             return self.abort(404)
         version = str(c.last_version) if version is "" else version

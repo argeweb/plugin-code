@@ -9,7 +9,7 @@
 from argeweb import BasicModel
 from argeweb.behaviors.searchable import Searchable
 from argeweb import Fields
-from code_target_model import CodeTargetModel
+from plugins.file.models.file_model import FileModel
 from google.appengine.ext import ndb
 
 
@@ -27,7 +27,7 @@ class CodeModel(BasicModel):
             "source": u"原始碼",
         }
     title = Fields.StringProperty(default=u"未命名")
-    target = Fields.CategoryProperty(kind=CodeTargetModel)
+    target = Fields.CategoryProperty(kind=FileModel)
     content_type = Fields.StringProperty()
     source = Fields.TextProperty()
     source_mini = Fields.TextProperty()

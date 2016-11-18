@@ -7,15 +7,13 @@
 # Date: 2015/3/3
 import random
 from time import time
-
 from google.appengine.api import channel
-
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold
-from argeweb import route_with, route
+from argeweb import route_with, route, route_menu
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
-from ..models.code_target_model import CodeTargetModel
+from plugins.file.models.file_model import FileModel
 from ..models.code_model import CodeModel
 from argeweb.core import json_util
 
@@ -34,6 +32,9 @@ class Code(Controller):
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
 
+    class Scaffold:
+        display_properties_in_list = ("title", "content_type", "last_version")
+
     @staticmethod
     def process_path(path):
         content_type = ""
@@ -41,11 +42,11 @@ class Code(Controller):
             path = "/" + path
         path = path.replace("/assets", "")
         if path.endswith(".css") is True:
-            content_type = "css"
+            content_type = "text/css"
         if path.endswith(".html") is True:
-            content_type = "html"
+            content_type = "text/html"
         if path.endswith(".js") is True:
-            content_type = "javascript"
+            content_type = "text/javascript"
         return path, content_type
 
     @route
@@ -72,7 +73,7 @@ class Code(Controller):
     @add_authorizations(auth.require_admin)
     def admin_create(self):
         target_name, content_type = self.process_path(self.params.get_string("path"))
-        n = CodeTargetModel.find_by_title(target_name)
+        n = FileModel.get_by_path(target_name)
         info = "error"
         msg = u"檔案已存在"
         html = u""
@@ -81,11 +82,12 @@ class Code(Controller):
         if n is None:
             info = "done"
             msg = u"檔案新增成功!"
-            n = CodeTargetModel()
-            n.title = target_name
+            n = FileModel()
+            n.name = target_name.split("/")[-1]
+            n.path = target_name
             n.content_type = content_type
             n.put()
-            html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code_target/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
+            html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
                    % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
         self.meta.change_view("json")
         self.context["data"] = {
@@ -135,11 +137,11 @@ class Code(Controller):
             return
         target.last_version = version
         target.content_type = content_type
-        if content_type == "javascript":
+        if content_type == "text/javascript":
             source_minify = self.mini_js(code)
-        elif content_type == "css":
+        elif content_type == "text/css":
             source_minify = self.mini_css(code)
-        elif content_type == "html":
+        elif content_type == "text/html":
             source_minify = u""
         else:
             self.context["data"] = {"error": "Wrong File Type"}
@@ -166,7 +168,7 @@ class Code(Controller):
     def admin_check(self):
         self.meta.change_view("json")
         target_name, content_type = self.process_path(self.params.get_string("path"))
-        target = CodeTargetModel.get_or_create(target_name, content_type)
+        target = FileModel.get_or_create(target_name, content_type)
         self.context["data"] = {"send": self.params.get_string("check_md5") == target.last_md5 and "false" or "true"}
 
     @route
@@ -182,18 +184,18 @@ class Code(Controller):
             last_md5 = m2.hexdigest()
         except:
             last_md5 = self.params.get_string("check_md5")
-        target = CodeTargetModel.get_or_create(target_name, content_type)
+        target = FileModel.get_or_create(target_name, content_type)
         if last_md5 == target.last_md5:
             self.context["data"] = {"error": "No need to change"}
             return
         version = int(time()) - 1460000000
         target.last_version = version
         target.content_type = content_type
-        if content_type == "javascript":
+        if content_type == "text/javascript":
             source_minify = self.mini_js(code)
-        elif content_type == "css":
+        elif content_type == "text/css":
             source_minify = self.mini_css(code)
-        elif content_type == "html":
+        elif content_type == "text/html":
             source_minify = u""
         else:
             self.context["data"] = {"error": "Wrong File Type"}
@@ -216,7 +218,7 @@ class Code(Controller):
         self.meta.change_view('jsonp')
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-        target = CodeTargetModel.find_by_title(target_name)
+        target = FileModel.get_by_path(target_name)
         self.context['data'] = {
             'content': target.title,
             'js-version': target.js_version,
@@ -227,8 +229,9 @@ class Code(Controller):
 
     @route_with(template='/<:(assets|code)>/<:(.*)>.html')
     def html(self, c, target_name, version=None):
-        target_name, version, is_min = self.get_params(target_name, ".html")
-        c = CodeTargetModel.find_by_title(target_name)
+        from .. import get_params_from_file_name
+        target_name, version, is_min = get_params_from_file_name(target_name, ".html")
+        c = FileModel.get_by_path(target_name)
         if version is None:
             version = str(c.html_version)
         s = CodeModel.get_source(target=c, content_type="html", version=version)
@@ -248,28 +251,13 @@ class Code(Controller):
         return_dict = {}
         js_file_name = self.params.get_string("js", u"api,channel").split(",")
         for item in js_file_name:
-            js = CodeTargetModel.find_by_title(item)
+            js = FileModel.get_by_path(item)
             return_dict["js-%s-%s" % (item, js.js_version)] = "/code/%s_%s.js" % (item, js.js_version)
         css_file_name = self.params.get_string("css", u"mini").split(",")
         for item in css_file_name:
-            css = CodeTargetModel.find_by_title(item)
+            css = FileModel.get_by_path(item)
             return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
         self.context['data'] = return_dict
-
-    def get_params(self, target_name, hotfix):
-        is_min = False
-        if str(target_name).endswith(".min"):
-            is_min = True
-            target_name = target_name.split(".min")[0]
-        try:
-            version = target_name.split("/")[-1].split("_")[-1].split(".")[0]
-            version = int(version)
-            target_name = target_name.split("_"+str(version))[0]
-        except:
-            version = ""
-        target_name = "/" + target_name + "." + hotfix
-        content_type = "javascript" if hotfix == "js" else "css"
-        return target_name, str(version), is_min, content_type
 
     def mini_js(self, js):
         from ..libs.jsmin import jsmin
@@ -314,3 +302,25 @@ class Code(Controller):
                     ','.join(selectors),
                     ''.join(['%s:%s;' % (key, properties[key]) for key in porder])[:-1]))
         return "".join(return_str)
+
+    @route_menu(list_name=u"backend", text=u"原始碼管理", sort=9713, group=u"檔案管理")
+    def admin_list(self):
+        self.meta.Model = FileModel
+        model = self.meta.Model
+        def query_factory_only_codefile(self):
+            return model.code_files()
+        self.scaffold.query_factory = query_factory_only_codefile
+
+        return scaffold.list(self)
+
+    @route
+    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=9714, group=u"檔案管理")
+    def admin_code_manager(self):
+        self.meta.Model = FileModel
+        self.context["list"] = self.meta.Model.code_files().fetch()
+        for item in self.context["list"]:
+            item.name = item.title.split("/")[-1]
+
+    @route
+    def admin_code_editor(self):
+        self.context["target_id"] = self.params.get_string("key")
