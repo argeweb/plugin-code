@@ -7,25 +7,16 @@
 # Date: 2015/7/12.
 
 from argeweb import BasicModel
-from argeweb.behaviors.searchable import Searchable
 from argeweb import Fields
 from plugins.file.models.file_model import FileModel
 from google.appengine.ext import ndb
 
 
-def get_source(target, code_type, version=None):
-    return CodeModel.get_source(target, code_type, version)
+def get_source(target, version=None):
+    return CodeModel.get_source(target, version)
 
 
 class CodeModel(BasicModel):
-    class Meta:
-        behaviors = (Searchable,)
-        label_name = {
-            "title": u"團體名稱",
-            "customer": u"所屬客戶",
-            "content_type": u"類型",
-            "source": u"原始碼",
-        }
     title = Fields.StringProperty(default=u"未命名")
     target = Fields.CategoryProperty(kind=FileModel)
     content_type = Fields.StringProperty()
@@ -38,11 +29,11 @@ class CodeModel(BasicModel):
         return cls.query(cls.content_type == content_type, cls.target == target.key).order(-cls.sort)
 
     @classmethod
-    def get_source(cls, target, content_type, version=None):
-        if version is not None:
-            return cls.query(cls.content_type == content_type, cls.target == target.key, cls.version == int(version)).order(-cls.sort).get()
+    def get_source(cls, target, version=None):
+        if version is not None and version != "":
+            return cls.query(cls.target == target.key, cls.version == int(version)).order(-cls.sort).get()
         else:
-            return cls.query(cls.content_type == content_type, cls.target == target.key).order(-cls.version).get()
+            return cls.query(cls.target == target.key).order(-cls.version).get()
 
     @classmethod
     def delete_with_target(cls, target_key):

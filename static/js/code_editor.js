@@ -48,6 +48,7 @@ function show_page(){
             if (target_type == "html"){
                 mode = "text/html"
             }
+            console.log(mode);
             code_editor = CodeMirror.fromTextArea(document.getElementById(editor_id), {
                 mode: mode,
                 lineNumbers: true,

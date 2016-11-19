@@ -8,6 +8,7 @@
 import random
 from time import time
 from google.appengine.api import channel
+from google.appengine.ext import ndb
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold
 from argeweb import route_with, route, route_menu
@@ -35,11 +36,31 @@ class Code(Controller):
     class Scaffold:
         display_properties_in_list = ("title", "content_type", "last_version")
 
+    def mk_dir(self, file):
+        path = file.path
+        paths = path.split("/")
+        last_parent = FileModel.root()
+        for i in xrange(1, len(paths)):
+            path_str = "/".join(paths[:i])
+            self.logging.info(path_str)
+            collection = FileModel.get_by_path(path_str)
+            if collection is None:
+                collection = FileModel()
+                collection.name = paths[i]
+                collection.path = path_str
+                collection.parent_resource = last_parent.key
+                collection.is_collection = True
+                collection.put()
+            last_parent = collection
+        file.parent_resource = last_parent.key
+        file.put()
+
     @staticmethod
     def process_path(path):
         content_type = ""
-        if path.startswith("/") is False:
-            path = "/" + path
+        path = path.replace("\\", "/")
+        if path.startswith("/") is True:
+            path = path[1:]
         path = path.replace("/assets", "")
         if path.endswith(".css") is True:
             content_type = "text/css"
@@ -87,6 +108,8 @@ class Code(Controller):
             n.path = target_name
             n.content_type = content_type
             n.put()
+            self.mk_dir(n)
+            content_type = content_type.replace("text/", "")
             html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
                    % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
         self.meta.change_view("json")
@@ -102,6 +125,8 @@ class Code(Controller):
     def admin_records(self):
         target = self.params.get_ndb_record("target")
         content_type = self.params.get_string("content_type")
+        if content_type.startswith("text/") is False:
+            content_type = "text/" + content_type
         records = CodeModel.all_with_target(target, content_type)
         self.meta.change_view("json")
         self.context['data'] = {
@@ -157,11 +182,18 @@ class Code(Controller):
         n.content_type = content_type
         n.target = target.key
         n.put()
+        self.mk_dir(target)
         self.context["data"] = {"info": "done"}
         if "client_id" in self.session:
             send_message_to_client(self.session["client_id"], {
                 "action": "code_refresh", "status": "success", "client": self.session["client_id"]
             })
+
+    @route
+    def admin_clear(self):
+        multi_keys = FileModel.all().fetch(keys_only=True)
+        ndb.delete_multi(multi_keys)
+        return "done"
 
     @route
     @add_authorizations(auth.require_admin)
@@ -200,6 +232,7 @@ class Code(Controller):
         else:
             self.context["data"] = {"error": "Wrong File Type"}
             return
+        target.path = target_name
         target.last_md5 = last_md5
         target.put()
         n = CodeModel()
@@ -210,6 +243,7 @@ class Code(Controller):
         n.content_type = content_type
         n.target = target.key
         n.put()
+        self.mk_dir(target)
         self.context["data"] = {"info": "done"}
 
     @route_with('/code/<target_name>_info.json')
@@ -230,11 +264,11 @@ class Code(Controller):
     @route_with(template='/<:(assets|code)>/<:(.*)>.html')
     def html(self, c, target_name, version=None):
         from .. import get_params_from_file_name
-        target_name, version, is_min = get_params_from_file_name(target_name, ".html")
+        target_name, version, is_min = get_params_from_file_name(target_name)
         c = FileModel.get_by_path(target_name)
         if version is None:
             version = str(c.html_version)
-        s = CodeModel.get_source(target=c, content_type="html", version=version)
+        s = CodeModel.get_source(target=c, version=version)
         if s is None:
             return self.error_and_abort(404)
         self.meta.change_view('render')
@@ -303,23 +337,24 @@ class Code(Controller):
                     ''.join(['%s:%s;' % (key, properties[key]) for key in porder])[:-1]))
         return "".join(return_str)
 
-    @route_menu(list_name=u"backend", text=u"原始碼管理", sort=9713, group=u"檔案管理")
     def admin_list(self):
         self.meta.Model = FileModel
         model = self.meta.Model
         def query_factory_only_codefile(self):
             return model.code_files()
         self.scaffold.query_factory = query_factory_only_codefile
-
         return scaffold.list(self)
 
     @route
     @route_menu(list_name=u"backend", text=u"線上編輯器", sort=9714, group=u"檔案管理")
     def admin_code_manager(self):
         self.meta.Model = FileModel
-        self.context["list"] = self.meta.Model.code_files().fetch()
-        for item in self.context["list"]:
-            item.name = item.title.split("/")[-1]
+        self.meta.pagination_limit = 1000
+        model = self.meta.Model
+        def query_factory_only_codefile(self):
+            return model.code_files()
+        self.scaffold.query_factory = query_factory_only_codefile
+        return scaffold.list(self)
 
     @route
     def admin_code_editor(self):

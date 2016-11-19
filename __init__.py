@@ -29,72 +29,64 @@ plugins_helper = {
 }
 
 
-def get_params_from_file_name(target_name, hotfix):
+def get_params_from_file_name(path):
     is_min = False
-    if str(target_name).endswith(".min"):
+    check_min = path.split(".min")
+    if len(check_min) >= 2:
         is_min = True
-        target_name = target_name.split(".min")[0]
+        path = check_min[0] + check_min[1]
     try:
-        version = target_name.split("/")[-1].split("_")[-1].split(".")[0]
+        version = path.split("/")[-1].split("_")[-1].split(".")[0]
         version = int(version)
-        target_name = target_name.split("_"+str(version))[0]
+        path = path.split("_"+str(version))[0]
     except:
         version = ""
-    target_name = "/" + target_name + "." + hotfix
-    content_type = "javascript" if hotfix == "js" else "css"
-    return target_name, str(version), is_min, content_type
+    return path, str(version), is_min
 
+def get_theme_path(theme, path):
+    if path.startswith(u"/themes/%s" % theme) is False:
+        path = u"/themes/%s/%s" % (theme, path)
+    if path.startswith("/") is True:
+        path = path[1:]
+    return path
 
 class GetFileHandler(webapp2.RequestHandler):
-    def get(self, target_name):
-        content_type = None
-        c = target_name.startswith("/code") and "code" or "assets"
-        if target_name.endswith(".js"):
-            content_type = "js"
-        if target_name.endswith(".css"):
-            content_type = "css"
-        target_name = target_name.replace("/" + c, "").replace("." + content_type, "")
-        from plugins.file.models.file_model import FileModel
+    def get(self, request_path):
+        from plugins.file.models.file_model import FileModel, get_file
         from google.appengine.api import namespace_manager
-        if content_type is None:
-            content_type, target_name, c = target_name, c, "assets"
-
         host_information, namespace, theme = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
-        target_name, version, is_min, content_type = get_params_from_file_name(target_name, content_type)
-        if target_name.startswith(u"/themes/%s" % theme) is False:
-            target_name = u"/themes/%s%s" % (theme, target_name)
+        request_path = get_theme_path(theme, request_path)
+        version = ""
+        is_min = False
         if self.request.headers.get('If-None-Match'):
             match = self.request.headers.get('If-None-Match').split("||")
-            if u"" + match[0] == target_name and u"" + match[-1] == theme:
+            if u"" + match[0] == request_path and u"" + match[-1] == theme:
                 return self.abort(304)
-        c = FileModel.get_by_path(target_name)
+        c = get_file(request_path)
         if c is None:
-            return self.abort(404)
+            path, version, is_min = get_params_from_file_name(request_path)
+            c = get_file(path)
+            if c is None:
+                return self.abort(404)
+        content_type = c.content_type_or_default
         version = str(c.last_version) if version is "" else version
-        etag = str(target_name) + "||" + version + "||" + str(theme)
+        etag = str(request_path) + "||" + version + "||" + str(theme)
         if self.request.headers.get('If-None-Match') == etag:
             return self.abort(304)
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
         self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
-        self.response.headers['Content-Type'] = 'text/' + content_type
+        self.response.headers['Content-Type'] = content_type
         self.response.headers["ETag"] = etag
         from models.code_model import CodeModel
-        s = CodeModel.get_source(target=c, content_type=content_type, version=version)
+        s = CodeModel.get_source(target=c, version=version)
         if s is None:
-            return self.abort(404)
+            return self.response.out.write("")
         if is_min is True:
             source = s.source_mini
         else:
             source = s.source
         self.response.out.write(source)
-        # self.meta.change_view('render')
-        # self.meta.view.template_name = "code/" + content_type + ".html"
-        # self.context["record"] = {
-        #     "target_name": target_name,
-        #     "source": source,
-        #     "version": version
-        # }
 
 getfile_app = webapp.WSGIApplication([('/([^/]+)?', GetFileHandler)],debug=False)

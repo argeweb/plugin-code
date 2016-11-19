@@ -1,5 +1,6 @@
 {%- import 'backend/macros.html' as s with context -%}
 {%- extends s.layout() -%}
+{%- set list = context[scaffolding.plural] -%}
 {%- block layout_content -%}
 <div class="ibox-content m-b-sm border-bottom h116">
     <div style="padding: 6px 10px;">
@@ -34,10 +35,10 @@
             <div class="row">
                 <div class="col-sm-12" id="files-area">
                     {% for item in list %}
-                    <div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="{{ item.title }}" data-content-type="{{ item.content_type }}">
+                    <div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="/{{ item.path }}" data-content-type="{{ item.content_type }}">
                         <div class="file">
                             <a href="{{ uri_action_link('code_editor', item) }}" target="aside_iframe">
-                                <div class="file-icon {{ item.content_type }}"><span>{{ item.name }}</span></div>
+                                <div class="file-icon {{ item.content_type.replace('text/', '') }}"><span>{{ item.name }}</span></div>
                                 <div class="file-name">
                                     {{ item.title }}
                                     <br>
@@ -57,7 +58,7 @@
     (function(page){
         page["current_type"] = "all";
         page["current_path"] = [];
-        page["paths"] = [{% for item in list %}'{{ item.title }}', {% endfor %}];
+        page["paths"] = [{% for item in list %}'/{{ item.path }}', {% endfor %}];
         page["change_dir"] = function(str){
             var target_dict = page["dir_dict"];
             if (str == "/"){
@@ -114,6 +115,9 @@
         page["change_type"] = function(str){
             $(".file-menu.active, .file-menu .active").removeClass("active");
             $(".type-"+str).addClass("active").parent().addClass("active");
+            if (str != "all"){
+                str = "text/" + str;
+            }
             page["current_type"] = str;
             page["change_dir"](".");
         };

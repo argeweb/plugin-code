@@ -4,13 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Editor</title>
-    <!--<link rel="stylesheet" href="/plugins/code/static/css/uikit.min.css">-->
     <link rel="stylesheet" href="/plugins/code/static/css/editor.css">
     <link rel="stylesheet" href="/static/components/codemirror/lib/codemirror.css">
-
     <script src="/static/components/jquery/dist/jquery.min.js"></script>
     <script src="/static/components/jquery-ui/ui/jquery-ui.custom.js"></script>
-    <script src="/plugins/code/static/js/uikit.js"></script>
     <script src="/static/components/codemirror/lib/codemirror.js"></script>
     <script src="/static/components/codemirror/mode/javascript/javascript.js"></script>
     <script src="/static/components/codemirror/mode/css/css.js"></script>
@@ -19,7 +16,7 @@
     <script src="/plugins/code/static/js/code_editor.js?r=2016-10-15&run={{ framework.app_version }}"></script>
 </head>
 
-<body data-target-id="{{ this.encode_key(target) }}" data-path="{{ target.title }}">
+<body data-target-id="{{ this.encode_key(target) }}" data-path="/{{ target.path }}">
 
 <div id="customizer" class="{{ body_class }}">
     <div class="cm-sidebar">
