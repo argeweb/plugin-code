@@ -36,32 +36,12 @@ class Code(Controller):
     class Scaffold:
         display_properties_in_list = ("title", "content_type", "last_version")
 
-    def mk_dir(self, file):
-        path = file.path
-        paths = path.split("/")
-        last_parent = FileModel.root()
-        for i in xrange(1, len(paths)):
-            path_str = "/".join(paths[:i])
-            self.logging.info(path_str)
-            collection = FileModel.get_by_path(path_str)
-            if collection is None:
-                collection = FileModel()
-                collection.name = paths[i]
-                collection.path = path_str
-                collection.parent_resource = last_parent.key
-                collection.is_collection = True
-                collection.put()
-            last_parent = collection
-        file.parent_resource = last_parent.key
-        file.put()
-
     @staticmethod
     def process_path(path):
         content_type = ""
         path = path.replace("\\", "/")
         if path.startswith("/") is True:
             path = path[1:]
-        path = path.replace("/assets", "")
         if path.endswith(".css") is True:
             content_type = "text/css"
         if path.endswith(".html") is True:
@@ -108,7 +88,7 @@ class Code(Controller):
             n.path = target_name
             n.content_type = content_type
             n.put()
-            self.mk_dir(n)
+            n.make_directory()
             content_type = content_type.replace("text/", "")
             html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
                    % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
@@ -182,26 +162,12 @@ class Code(Controller):
         n.content_type = content_type
         n.target = target.key
         n.put()
-        self.mk_dir(target)
+        target.make_directory()
         self.context["data"] = {"info": "done"}
         if "client_id" in self.session:
             send_message_to_client(self.session["client_id"], {
                 "action": "code_refresh", "status": "success", "client": self.session["client_id"]
             })
-
-    @route
-    def admin_clear(self):
-        multi_keys = FileModel.all().fetch(keys_only=True)
-        ndb.delete_multi(multi_keys)
-        return "done"
-
-    @route
-    @add_authorizations(auth.require_admin)
-    def admin_check(self):
-        self.meta.change_view("json")
-        target_name, content_type = self.process_path(self.params.get_string("path"))
-        target = FileModel.get_or_create(target_name, content_type)
-        self.context["data"] = {"send": self.params.get_string("check_md5") == target.last_md5 and "false" or "true"}
 
     @route
     @add_authorizations(auth.require_admin)
@@ -234,6 +200,7 @@ class Code(Controller):
             return
         target.path = target_name
         target.last_md5 = last_md5
+        target.content_length = len(code)
         target.put()
         n = CodeModel()
         n.title = u" 版本 " + str(version)
@@ -243,7 +210,7 @@ class Code(Controller):
         n.content_type = content_type
         n.target = target.key
         n.put()
-        self.mk_dir(target)
+        target.make_directory()
         self.context["data"] = {"info": "done"}
 
     @route_with('/code/<target_name>_info.json')

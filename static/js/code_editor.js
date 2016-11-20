@@ -82,12 +82,6 @@ function selectTheme(){
 function after_save(data){
     showNotify("已儲存");
     load();
-    $.ajax({
-        type: 'post',
-        url: "/admin/code/code_refresh",
-        dataType: 'jsonp',
-        jsonpCallback: "OrderPlus.message.load"
-    });
 }
 
 function load(callback){

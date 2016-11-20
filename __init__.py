@@ -52,7 +52,7 @@ def get_theme_path(theme, path):
 
 class GetFileHandler(webapp2.RequestHandler):
     def get(self, request_path):
-        from plugins.file.models.file_model import FileModel, get_file
+        from plugins.file.models.file_model import get_file
         from google.appengine.api import namespace_manager
         host_information, namespace, theme = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
@@ -89,4 +89,4 @@ class GetFileHandler(webapp2.RequestHandler):
             source = s.source
         self.response.out.write(source)
 
-getfile_app = webapp.WSGIApplication([('/([^/]+)?', GetFileHandler)],debug=False)
+getcode = webapp.WSGIApplication([('/(.+)+', GetFileHandler)],debug=False)
