@@ -313,7 +313,7 @@ class Code(Controller):
         return scaffold.list(self)
 
     @route
-    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=9814, group=u"檔案管理")
+    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=9704, group=u"檔案管理")
     def admin_code_manager(self):
         self.meta.Model = FileModel
         self.meta.pagination_limit = 1000
