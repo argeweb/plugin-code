@@ -10,19 +10,19 @@ from google.appengine.ext import webapp
 from argeweb.core import settings
 
 plugins_helper = {
-    "title": u"線上編輯原始碼",
-    "desc": u"可以以動態的方式進行程式碼編輯",
-    "controllers": {
-        "code": {
-            "group": u"原始碼",
-            "actions": [
-                {"action": "code_manager", "name": u"線上編輯器"},
-                {"action": "code_editor", "name": u"編輯"},
-                {"action": "list", "name": u"原始碼管理"},
-                {"action": "add", "name": u"新增原始碼"},
-                {"action": "edit", "name": u"編輯原始碼"},
-                {"action": "view", "name": u"檢視原始碼"},
-                {"action": "delete", "name": u"刪除原始碼"},
+    'title': u'線上編輯原始碼',
+    'desc': u'可以以動態的方式進行程式碼編輯',
+    'controllers': {
+        'code': {
+            'group': u'原始碼',
+            'actions': [
+                {'action': 'code_manager', 'name': u'線上編輯器'},
+                {'action': 'code_editor', 'name': u'編輯'},
+                {'action': 'list', 'name': u'原始碼管理'},
+                {'action': 'add', 'name': u'新增原始碼'},
+                {'action': 'edit', 'name': u'編輯原始碼'},
+                {'action': 'view', 'name': u'檢視原始碼'},
+                {'action': 'delete', 'name': u'刪除原始碼'},
             ]
         }
     }
@@ -36,9 +36,9 @@ def get_params_from_file_name(path):
         is_min = True
         path = check_min[0] + check_min[1]
     try:
-        version = path.split("/")[-1].split("_")[-1].split(".")[0]
+        version = path.split("/")[-1].split('_')[-1].split(".")[0]
         version = int(version)
-        path = path.split("_"+str(version))[0]
+        path = path.split('_'+str(version))[0]
     except:
         version = ""
     return path, str(version), is_min
@@ -81,7 +81,7 @@ class GetFileHandler(webapp2.RequestHandler):
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
         self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
         self.response.headers['Content-Type'] = content_type
-        self.response.headers["ETag"] = etag
+        self.response.headers['ETag'] = etag
         from models.code_model import CodeModel
         s = CodeModel.get_source(target=c, version=version)
         if s is None:

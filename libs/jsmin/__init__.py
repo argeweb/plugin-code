@@ -92,7 +92,7 @@ class JavascriptMinify(object):
 
         read = self.ins.read
 
-        space_strings = "abcdefghijklmnopqrstuvwxyz"\
+        space_strings = 'abcdefghijklmnopqrstuvwxyz'\
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$\\"
         self.space_strings = space_strings
         starters, enders = '{[(+-', '}])+-/' + self.quote_chars

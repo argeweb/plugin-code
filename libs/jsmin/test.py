@@ -190,9 +190,9 @@ Element.cleanWhitespace(element);"""
     def testLiteralRe(self):
         js = r"""
         myString.replace(/\\/g, '/');
-        console.log("hi");
+        console.log('hi');
         """
-        expected = r"""myString.replace(/\\/g,'/');console.log("hi");"""
+        expected = r"""myString.replace(/\\/g,'/');console.log('hi');"""
         self.assertMinified(js, expected)
         
         js = r''' return /^data:image\//i.test(url) || 
@@ -245,9 +245,9 @@ throw'Server returned an invalid collection representation.';this._collection=ev
     
     def testDoubleSpace(self):
         js = r'''
-var  foo    =  "hey";
+var  foo    =  'hey';
         '''
-        self.assertMinified(js, 'var foo="hey";')
+        self.assertMinified(js, 'var foo='hey';')
     
     def testLeadingRegex(self):
         js = r'/[d]+/g    '
@@ -310,8 +310,8 @@ var  foo    =  "hey";
         self.assertMinified("return//comment...\r\na", "return\na")
 
     def testSingleComment2(self):
-        self.assertMinified('x.replace(/\//, "_")// slash to underscore',
-                'x.replace(/\//,"_")')
+        self.assertMinified('x.replace(/\//, '_')// slash to underscore',
+                'x.replace(/\//,'_')')
 
     def testSlashesNearComments(self):
         original = '''
@@ -334,13 +334,13 @@ var  foo    =  "hey";
         self.assertMinified(original, expected)
 
     def test_space_plus(self):
-        original = '"s" + ++e + "s"'
-        expected = '"s"+ ++e+"s"'
+        original = ''s' + ++e + 's''
+        expected = ''s'+ ++e+'s''
         self.assertMinified(original, expected)
 
     def test_no_final_newline(self):
-        original = '"s"'
-        expected = '"s"'
+        original = ''s''
+        expected = ''s''
         self.assertMinified(original, expected)
 
     def test_space_with_regex_repeats(self):
@@ -352,12 +352,12 @@ var  foo    =  "hey";
         self.assertMinified(original, original)  # there should be nothing jsmin can do here
 
     def test_space_in_regex(self):
-        original = '/a (a)/.test("a")'
+        original = '/a (a)/.test('a')'
         self.assertMinified(original, original)
 
     def test_brackets_around_slashed_regex(self):
-        original = 'function a() { /\//.test("a") }'
-        expected = 'function a(){/\//.test("a")}'
+        original = 'function a() { /\//.test('a') }'
+        expected = 'function a(){/\//.test('a')}'
         self.assertMinified(original, expected)
 
     def test_angular_1(self):
@@ -418,7 +418,7 @@ with a new line`'''
         self.assertMinified(original, original, quote_chars="'\"`")
 
         original = '''`Fifteen is ${a +
-b} and not ${2 * a + "b"}.`'''
+b} and not ${2 * a + 'b'}.`'''
         self.assertMinified(original, original, quote_chars="'\"`")
 
     def testBackticksTagged(self):
@@ -460,8 +460,8 @@ b} and not ${2 * a + "b"}.`'''
             '1 /* this is also a comment */',
             '{} // this is a comment',
             '{} /* this is also a comment */',
-            '"YOLO" /* this is a comment */',
-            '"YOLO" // this is a comment',
+            ''YOLO' /* this is a comment */',
+            ''YOLO' // this is a comment',
             '(1 + 2) // comment',
             '(1 + 2) /* yup still comment */',
             'var b'
@@ -475,8 +475,8 @@ b} and not ${2 * a + "b"}.`'''
             '1',
             '{}',
             '{}',
-            '"YOLO"',
-            '"YOLO"',
+            ''YOLO'',
+            ''YOLO'',
             '(1+2)',
             '(1+2)',
             'var b'
@@ -485,13 +485,13 @@ b} and not ${2 * a + "b"}.`'''
         self.assertMinified(original, expected)
 
     def test_newline_between_strings(self):
-        self.assertMinified('"yolo"\n"loyo"', '"yolo"\n"loyo"')
+        self.assertMinified(''yolo'\n'loyo'', ''yolo'\n'loyo'')
 
     def test_issue_10_comments_between_tokens(self):
         self.assertMinified('var/* comment */a', 'var a')
 
     def test_ends_with_string(self):
-        self.assertMinified('var s = "s"', 'var s="s"')
+        self.assertMinified('var s = 's'', 'var s='s'')
 
     def test_short_comment(self):
         self.assertMinified('a;/**/b', 'a;b')
@@ -507,17 +507,17 @@ b} and not ${2 * a + "b"}.`'''
 
     def test_issue_9_single_comments(self):
         original = '''
-            var a = "hello" // this is a comment
+            var a = 'hello' // this is a comment
                        a += " world"
         '''
-        self.assertMinified(original, 'var a="hello"\na+=" world"')
+        self.assertMinified(original, 'var a='hello'\na+=" world"')
 
     def test_issue_9_multi_comments(self):
         original = '''
-            var a = "hello" /* this is a comment */
+            var a = 'hello' /* this is a comment */
                        a += " world"
         '''
-        self.assertMinified(original, 'var a="hello"\na+=" world"')
+        self.assertMinified(original, 'var a='hello'\na+=" world"')
 
     def test_issue_12_re_nl_if(self):
         original = '''

@@ -17,7 +17,7 @@ def get_source(target, version=None):
 
 
 class CodeModel(BasicModel):
-    title = Fields.StringProperty(default=u"未命名")
+    title = Fields.StringProperty(default=u'未命名')
     target = Fields.CategoryProperty(kind=FileModel)
     content_type = Fields.StringProperty()
     source = Fields.TextProperty()

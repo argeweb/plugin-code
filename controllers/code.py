@@ -34,7 +34,7 @@ class Code(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_properties_in_list = ("title", "content_type", "last_version")
+        display_properties_in_list = ('title', 'content_type', 'last_version')
 
     @staticmethod
     def process_path(path):
@@ -55,33 +55,31 @@ class Code(Controller):
         if self.request.headers.get('If-None-Match'):
             return self.abort(304)
         client_id = None
-        if "client_id" in self.session:
-            client_id = self.session["client_id"]
+        if 'client_id' in self.session:
+            client_id = self.session['client_id']
         if client_id is None:
             rnd = ''.join([str(random.randint(100, 999)) for x in range(0, 10)])
             client_id = rnd[11:16] + rnd[21:26]
-            self.session["client_id"] = client_id
-        self.response.headers["ETag"] = self.request.path_url + "_" + client_id
-        self.context["remote"] = self.request.path_url
-        self.context["token"] = crete_channel_token(client_id)
+            self.session['client_id'] = client_id
+        self.response.headers['ETag'] = self.request.path_url + '_' + client_id
+        self.context['remote'] = self.request.path_url
+        self.context['token'] = crete_channel_token(client_id)
 
     @route
-    @add_authorizations(auth.require_admin)
     def admin_index(self):
-        self.context["target"] = self.params.get_ndb_record("key")
+        self.context['target'] = self.params.get_ndb_record('key')
 
     @route
-    @add_authorizations(auth.require_admin)
     def admin_create(self):
-        target_name, content_type = self.process_path(self.params.get_string("path"))
+        target_name, content_type = self.process_path(self.params.get_string('path'))
         n = FileModel.get_by_path(target_name)
-        info = "error"
-        msg = u"檔案已存在"
+        info = 'error'
+        msg = u'檔案已存在'
         html = u""
         if content_type is "":
             msg = u"檔案需為 .js  .css  .html"
         if n is None:
-            info = "done"
+            info = 'done'
             msg = u"檔案新增成功!"
             n = FileModel()
             n.name = target_name.split("/")[-1]
@@ -92,43 +90,41 @@ class Code(Controller):
             content_type = content_type.replace("text/", "")
             html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
                    % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
-        self.meta.change_view("json")
-        self.context["data"] = {
-            "info": info,
-            "path": target_name,
-            "msg": msg,
-            "html": html
+        self.meta.change_view('json')
+        self.context['data'] = {
+            'info': info,
+            'path': target_name,
+            'msg': msg,
+            'html': html
         }
 
     @route
-    @add_authorizations(auth.require_admin)
     def admin_records(self):
-        target = self.params.get_ndb_record("target")
-        content_type = self.params.get_string("content_type")
+        target = self.params.get_ndb_record('target')
+        content_type = self.params.get_string('content_type')
         if content_type.startswith("text/") is False:
             content_type = "text/" + content_type
         records = CodeModel.all_with_target(target, content_type)
-        self.meta.change_view("json")
+        self.meta.change_view('json')
         self.context['data'] = {
-            'info': "done",
+            'info': 'done',
             'records': records.fetch(15)
         }
 
     @route
     @add_authorizations(auth.require_admin)
     def editor(self):
-        self.context["target"] = self.params.get_string("target")
-        self.context["file_type"] = self.params.get_string("file_type")
-        self.context["record_key"] = self.params.get_string("record_key")
-        self.context["record"] = self.params.get_ndb_record("record_key")
+        self.context['target'] = self.params.get_string('target')
+        self.context['file_type'] = self.params.get_string('file_type')
+        self.context['record_key'] = self.params.get_string('record_key')
+        self.context['record'] = self.params.get_ndb_record('record_key')
 
     @route
-    @add_authorizations(auth.require_admin)
     def admin_save(self):
-        self.meta.change_view("json")
-        code = self.params.get_string("code")
-        target = self.params.get_ndb_record("target")
-        content_type = self.params.get_string("file_type")
+        self.meta.change_view('json')
+        code = self.params.get_string('code')
+        target = self.params.get_ndb_record('target')
+        content_type = self.params.get_string('file_type')
         version = int(time()) - 1460000000
         import hashlib
         try:
@@ -138,7 +134,7 @@ class Code(Controller):
         except:
             last_md5 = str(time())
         if last_md5 == target.last_md5:
-            self.context["data"] = {"error": "No need to change"}
+            self.context['data'] = {'error': "No need to change"}
             return
         target.last_version = version
         target.content_type = content_type
@@ -149,7 +145,7 @@ class Code(Controller):
         elif content_type == "text/html":
             source_minify = u""
         else:
-            self.context["data"] = {"error": "Wrong File Type"}
+            self.context['data'] = {'error': "Wrong File Type"}
             return
         target.last_md5 = last_md5
         target.put()
@@ -163,28 +159,27 @@ class Code(Controller):
         n.target = target.key
         n.put()
         target.make_directory()
-        self.context["data"] = {"info": "done"}
-        if "client_id" in self.session:
-            send_message_to_client(self.session["client_id"], {
-                "action": "code_refresh", "status": "success", "client": self.session["client_id"]
+        self.context['data'] = {'info': 'done'}
+        if 'client_id' in self.session:
+            send_message_to_client(self.session['client_id'], {
+                'action': 'code_refresh', 'status': 'success', 'client': self.session['client_id']
             })
 
     @route
-    @add_authorizations(auth.require_admin)
     def admin_upload(self):
-        self.meta.change_view("json")
-        target_name, content_type = self.process_path(self.params.get_string("path"))
-        code = self.params.get_string("code")
+        self.meta.change_view('json')
+        target_name, content_type = self.process_path(self.params.get_string('path'))
+        code = self.params.get_string('code')
         import hashlib
         try:
             m2 = hashlib.md5()
             m2.update(code)
             last_md5 = m2.hexdigest()
         except:
-            last_md5 = self.params.get_string("check_md5")
+            last_md5 = self.params.get_string('check_md5')
         target = FileModel.get_or_create(target_name, content_type)
         if last_md5 == target.last_md5:
-            self.context["data"] = {"error": "No need to change"}
+            self.context['data'] = {'error': "No need to change"}
             return
         version = int(time()) - 1460000000
         target.last_version = version
@@ -196,7 +191,7 @@ class Code(Controller):
         elif content_type == "text/html":
             source_minify = u""
         else:
-            self.context["data"] = {"error": "Wrong File Type"}
+            self.context['data'] = {'error': "Wrong File Type"}
             return
         target.path = target_name
         target.last_md5 = last_md5
@@ -211,9 +206,9 @@ class Code(Controller):
         n.target = target.key
         n.put()
         target.make_directory()
-        self.context["data"] = {"info": "done"}
+        self.context['data'] = {'info': 'done'}
 
-    @route_with('/code/<target_name>_info.json')
+    @route_with("/code/<target_name>_info.json")
     def info(self, target_name):
         import os
         self.meta.change_view('jsonp')
@@ -228,7 +223,7 @@ class Code(Controller):
             'version': os.environ['CURRENT_VERSION_ID']
         }
 
-    @route_with(template='/<:(assets|code)>/<:(.*)>.html')
+    @route_with(template="/<:(assets|code)>/<:(.*)>.html")
     def html(self, c, target_name, version=None):
         from .. import get_params_from_file_name
         target_name, version, is_min = get_params_from_file_name(target_name)
@@ -239,9 +234,9 @@ class Code(Controller):
         if s is None:
             return self.error_and_abort(404)
         self.meta.change_view('render')
-        self.context["record"] = {
-            "source": s.source,
-            "version": s.version
+        self.context['record'] = {
+            'source': s.source,
+            'version': s.version
         }
 
     @route_with('/code/version.json')
@@ -250,11 +245,11 @@ class Code(Controller):
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
         return_dict = {}
-        js_file_name = self.params.get_string("js", u"api,channel").split(",")
+        js_file_name = self.params.get_string('js', u"api,channel").split(",")
         for item in js_file_name:
             js = FileModel.get_by_path(item)
             return_dict["js-%s-%s" % (item, js.js_version)] = "/code/%s_%s.js" % (item, js.js_version)
-        css_file_name = self.params.get_string("css", u"mini").split(",")
+        css_file_name = self.params.get_string('css', u'mini').split(",")
         for item in css_file_name:
             css = FileModel.get_by_path(item)
             return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
@@ -313,7 +308,7 @@ class Code(Controller):
         return scaffold.list(self)
 
     @route
-    @route_menu(list_name=u"backend", text=u"線上編輯器", sort=9704, group=u"檔案管理")
+    @route_menu(list_name=u'backend', text=u'線上編輯器', sort=9704, group=u'檔案管理')
     def admin_code_manager(self):
         self.meta.Model = FileModel
         self.meta.pagination_limit = 1000
@@ -325,4 +320,4 @@ class Code(Controller):
 
     @route
     def admin_code_editor(self):
-        self.context["target_id"] = self.params.get_string("key")
+        self.context['target_id'] = self.params.get_string('key')
