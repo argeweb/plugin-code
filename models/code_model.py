@@ -30,7 +30,7 @@ class CodeModel(BasicModel):
 
     @classmethod
     def get_source(cls, target, version=None):
-        if version is not None and version != "":
+        if version is not None and version != '':
             return cls.query(cls.target == target.key, cls.version == int(version)).order(-cls.sort).get()
         else:
             return cls.query(cls.target == target.key).order(-cls.version).get()

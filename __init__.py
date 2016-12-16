@@ -31,22 +31,22 @@ plugins_helper = {
 
 def get_params_from_file_name(path):
     is_min = False
-    check_min = path.split(".min")
+    check_min = path.split('.min')
     if len(check_min) >= 2:
         is_min = True
         path = check_min[0] + check_min[1]
     try:
-        version = path.split("/")[-1].split('_')[-1].split(".")[0]
+        version = path.split('/')[-1].split('_')[-1].split('.')[0]
         version = int(version)
         path = path.split('_'+str(version))[0]
     except:
-        version = ""
+        version = ''
     return path, str(version), is_min
 
 def get_theme_path(theme, path):
-    if path.startswith(u"/themes/%s" % theme) is False:
-        path = u"/themes/%s/%s" % (theme, path)
-    if path.startswith("/") is True:
+    if path.startswith(u'/themes/%s' % theme) is False:
+        path = u'/themes/%s/%s' % (theme, path)
+    if path.startswith('/') is True:
         path = path[1:]
     return path
 
@@ -56,15 +56,15 @@ class GetFileHandler(webapp2.RequestHandler):
         from google.appengine.api import namespace_manager
         host_information, namespace, theme = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
-        if request_path.startswith("assets/") is True:
+        if request_path.startswith('assets/') is True:
             request_path = request_path[7:]
         else:
             request_path = get_theme_path(theme, request_path)
-        version = ""
+        version = ''
         is_min = False
         if self.request.headers.get('If-None-Match'):
-            match = self.request.headers.get('If-None-Match').split("||")
-            if u"" + match[0] == request_path and u"" + match[-1] == theme:
+            match = self.request.headers.get('If-None-Match').split('||')
+            if u'' + match[0] == request_path and u'' + match[-1] == theme:
                 return self.abort(304)
         c = get_file(request_path)
         if c is None:
@@ -73,19 +73,19 @@ class GetFileHandler(webapp2.RequestHandler):
             if c is None:
                 return self.abort(404)
         content_type = c.content_type_or_default
-        version = str(c.last_version) if version is "" else version
-        etag = str(request_path) + "||" + version + "||" + str(theme)
+        version = str(c.last_version) if version is '' else version
+        etag = str(request_path) + '||' + version + '||' + str(theme)
         if self.request.headers.get('If-None-Match') == etag:
             return self.abort(304)
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
-        self.response.headers["Cache-control"] = "public, max-age=60" if version is "" else "public, max-age=604800"
+        self.response.headers['Cache-control'] = 'public, max-age=60' if version is '' else 'public, max-age=604800'
         self.response.headers['Content-Type'] = content_type
         self.response.headers['ETag'] = etag
         from models.code_model import CodeModel
         s = CodeModel.get_source(target=c, version=version)
         if s is None:
-            return self.response.out.write("")
+            return self.response.out.write('')
         if is_min is True:
             source = s.source_mini
         else:

@@ -39,15 +39,15 @@ class Code(Controller):
     @staticmethod
     def process_path(path):
         content_type = ""
-        path = path.replace("\\", "/")
-        if path.startswith("/") is True:
+        path = path.replace('\\', '/')
+        if path.startswith('/') is True:
             path = path[1:]
-        if path.endswith(".css") is True:
-            content_type = "text/css"
-        if path.endswith(".html") is True:
-            content_type = "text/html"
-        if path.endswith(".js") is True:
-            content_type = "text/javascript"
+        if path.endswith('.css') is True:
+            content_type = 'text/css'
+        if path.endswith('.html') is True:
+            content_type = 'text/html'
+        if path.endswith('.js') is True:
+            content_type = 'text/javascript'
         return path, content_type
 
     @route
@@ -75,21 +75,21 @@ class Code(Controller):
         n = FileModel.get_by_path(target_name)
         info = 'error'
         msg = u'檔案已存在'
-        html = u""
+        html = u''
         if content_type is "":
-            msg = u"檔案需為 .js  .css  .html"
+            msg = u'檔案需為 .js  .css  .html'
         if n is None:
             info = 'done'
             msg = u"檔案新增成功!"
             n = FileModel()
-            n.name = target_name.split("/")[-1]
+            n.name = target_name.split('/')[-1]
             n.path = target_name
             n.content_type = content_type
             n.put()
             n.make_directory()
-            content_type = content_type.replace("text/", "")
+            content_type = content_type.replace('text/', '')
             html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
-                   % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split("/")[-1], n.title, n.last_version)
+                   % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split('/')[-1], n.title, n.last_version)
         self.meta.change_view('json')
         self.context['data'] = {
             'info': info,
@@ -102,8 +102,8 @@ class Code(Controller):
     def admin_records(self):
         target = self.params.get_ndb_record('target')
         content_type = self.params.get_string('content_type')
-        if content_type.startswith("text/") is False:
-            content_type = "text/" + content_type
+        if content_type.startswith('text/') is False:
+            content_type = 'text/' + content_type
         records = CodeModel.all_with_target(target, content_type)
         self.meta.change_view('json')
         self.context['data'] = {
@@ -134,24 +134,24 @@ class Code(Controller):
         except:
             last_md5 = str(time())
         if last_md5 == target.last_md5:
-            self.context['data'] = {'error': "No need to change"}
+            self.context['data'] = {'error': 'No need to change'}
             return
         target.last_version = version
         target.content_type = content_type
-        if content_type == "text/javascript":
+        if content_type == 'text/javascript':
             source_minify = self.mini_js(code)
-        elif content_type == "text/css":
+        elif content_type == 'text/css':
             source_minify = self.mini_css(code)
-        elif content_type == "text/html":
-            source_minify = u""
+        elif content_type == 'text/html':
+            source_minify = u''
         else:
-            self.context['data'] = {'error': "Wrong File Type"}
+            self.context['data'] = {'error': 'Wrong File Type'}
             return
         target.last_md5 = last_md5
         target.put()
 
         n = CodeModel()
-        n.title = u" 版本 " + str(version)
+        n.title = u' 版本 ' + str(version)
         n.source = code
         n.source_mini = source_minify
         n.version = version
@@ -179,26 +179,26 @@ class Code(Controller):
             last_md5 = self.params.get_string('check_md5')
         target = FileModel.get_or_create(target_name, content_type)
         if last_md5 == target.last_md5:
-            self.context['data'] = {'error': "No need to change"}
+            self.context['data'] = {'error': 'No need to change'}
             return
         version = int(time()) - 1460000000
         target.last_version = version
         target.content_type = content_type
-        if content_type == "text/javascript":
+        if content_type == 'text/javascript':
             source_minify = self.mini_js(code)
-        elif content_type == "text/css":
+        elif content_type == 'text/css':
             source_minify = self.mini_css(code)
-        elif content_type == "text/html":
-            source_minify = u""
+        elif content_type == 'text/html':
+            source_minify = u''
         else:
-            self.context['data'] = {'error': "Wrong File Type"}
+            self.context['data'] = {'error': 'Wrong File Type'}
             return
         target.path = target_name
         target.last_md5 = last_md5
         target.content_length = len(code)
         target.put()
         n = CodeModel()
-        n.title = u" 版本 " + str(version)
+        n.title = u' 版本 ' + str(version)
         n.source = code
         n.source_mini = source_minify
         n.version = version
@@ -245,14 +245,14 @@ class Code(Controller):
         self.response.headers.setdefault('Access-Control-Allow-Origin', '*')
         self.response.headers.setdefault('Access-Control-Allow-Headers', 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With')
         return_dict = {}
-        js_file_name = self.params.get_string('js', u"api,channel").split(",")
+        js_file_name = self.params.get_string('js', u'api,channel').split(',')
         for item in js_file_name:
             js = FileModel.get_by_path(item)
-            return_dict["js-%s-%s" % (item, js.js_version)] = "/code/%s_%s.js" % (item, js.js_version)
-        css_file_name = self.params.get_string('css', u'mini').split(",")
+            return_dict['js-%s-%s' % (item, js.js_version)] = '/code/%s_%s.js' % (item, js.js_version)
+        css_file_name = self.params.get_string('css', u'mini').split(',')
         for item in css_file_name:
             css = FileModel.get_by_path(item)
-            return_dict["css-%s-%s" % (item, css.css_version)] = "/code/%s_%s.css" % (item, css.css_version)
+            return_dict['css-%s-%s' % (item, css.css_version)] = '/code/%s_%s.css' % (item, css.css_version)
         self.context['data'] = return_dict
 
     def mini_js(self, js):
