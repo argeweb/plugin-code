@@ -15,7 +15,7 @@
     <script src="/plugins/code/static/js/code_editor.js?r=2016-10-15&run={{ framework.app_version }}"></script>
 </head>
 
-<body data-target-id="{{ this.encode_key(target) }}" data-path="/{{ target.path }}">
+<body data-code-path="{{ uri_action_link('list') }}" {% if uri_exists_with_permission(action="view") %}data-target-id="{{ this.encode_key(target) }}" data-path="/{{ target.path }}"{% endif %}>
 
 <div id="customizer" class="{{ body_class }}">
     <div class="cm-sidebar">

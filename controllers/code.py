@@ -70,7 +70,7 @@ class Code(Controller):
         self.context['target'] = self.params.get_ndb_record('key')
 
     @route
-    def admin_create(self):
+    def admin_add(self):
         target_name, content_type = self.process_path(self.params.get_string('path'))
         n = FileModel.get_by_path(target_name)
         info = 'error'
@@ -113,14 +113,14 @@ class Code(Controller):
 
     @route
     @add_authorizations(auth.require_admin)
-    def editor(self):
+    def admin_editor(self):
         self.context['target'] = self.params.get_string('target')
         self.context['file_type'] = self.params.get_string('file_type')
         self.context['record_key'] = self.params.get_string('record_key')
         self.context['record'] = self.params.get_ndb_record('record_key')
 
     @route
-    def admin_save(self):
+    def admin_edit(self):
         self.meta.change_view('json')
         code = self.params.get_string('code')
         target = self.params.get_ndb_record('target')
@@ -137,6 +137,8 @@ class Code(Controller):
             self.context['data'] = {'error': 'No need to change'}
             return
         target.last_version = version
+        if content_type.startswith('text/') is False:
+            content_type = 'text/' + content_type
         target.content_type = content_type
         if content_type == 'text/javascript':
             source_minify = self.mini_js(code)
@@ -309,7 +311,7 @@ class Code(Controller):
 
     @route
     @route_menu(list_name=u'backend', text=u'線上編輯器', sort=9704, group=u'檔案管理')
-    def admin_code_manager(self):
+    def admin_list(self):
         self.meta.Model = FileModel
         self.meta.pagination_limit = 1000
         model = self.meta.Model
@@ -320,4 +322,6 @@ class Code(Controller):
 
     @route
     def admin_code_editor(self):
+        if self.uri_exists_with_permission(action='view') is False:
+            return self.error_and_abort(403)
         self.context['target_id'] = self.params.get_string('key')

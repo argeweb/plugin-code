@@ -22,7 +22,7 @@
             <div class="ibox float-e-margins">
                 <div class="ibox-content">
                     <div class="file-manager">
-                        <button class="btn btn-primary btn-block" id="insert-file">新增文件</button>
+                        {% if uri_exists_with_permission(action="add") %}<button class="btn btn-primary btn-block" id="insert-file">新增文件</button>{% endif %}
                         <div class="hr-line-dashed"></div>
                         <h5>虛擬目錄</h5>
                         <ul class="folder-list" style="padding: 0"></ul>
@@ -166,7 +166,7 @@
                 showLoaderOnConfirm: true,
                 preConfirm: function (path) {
                     return new Promise(function (resolve, reject) {
-                        json_async("/admin/code/create?path="+path, null, function(data){
+                        json_async("{% if uri_exists_with_permission(action="add") %}{{ uri_action_link('add') }}{% endif %}?path="+path, null, function(data){
                             if (data.info == "done"){
                                 resolve(data)
                             }else{

@@ -23,19 +23,20 @@ function json_async(url,data,successCallback,errorCallback){$.ajax({url:url,type
 function ajax(url,data,successCallback,errorCallback){$.ajax({url:url,type:"GET",cache: false,data:data,async:true,success:function(responseText){successCallback(responseText)},error:function(xhr,ajaxOptions,thrownError){if(errorCallback){errorCallback(xhr.responseText)}else{window.alert(thrownError.message)}}})};
 function html2text(){$(".html_2_text").each(function(){var text=$(this).text();var old_length=$(this).text().length;var length=50;if($(this).data("word-count")!=undefined){try{length=parseInt($(this).data("word-count"))}catch(e){}}if(length>0){$(this).text(text.substring(0,length));if(old_length>=length){$(this).text($(this).text()+"...")}}$(this).show()})};
 function yooliang_replace_url_param(url,name,newvalue){url=url.replace("#/","");var old="";var m=url.substring(0,url.indexOf("?"));var s=url.substring(url.indexOf("?"),url.length);var j=0;if(url.indexOf("?")>=0){var i=s.indexOf(name+"=");if(i>=0){j=s.indexOf("&",i);if(j>=0){old=s.substring(i+name.length+1,j);s=url.replace(name+"="+old,name+"="+newvalue)}else{old=s.substring(i+name.length+1,s.length);s=url.replace(name+"="+old,name+"="+newvalue)}}else{s=url+"&"+name+"="+newvalue}}else{s=url+"?"+name+"="+newvalue}return s};
+var code_path = "";
 var target_id = "";
 var target_path = "";
 var target_type = "";
 
 function showNotify(msg){
-    top.message.quick_info(msg);
+    top.message.snackbar(msg);
 }
 
 var code_editor = null;
 function show_page(){
     var text = $("#history option:selected").text() || "新文件";
     var record_key = $("#history").val() || "";
-    var url = "/code/editor?customer=" + target_id + "&file_type=" + target_type + "&record_key=" + record_key;
+    var url = code_path + "/editor?customer=" + target_id + "&file_type=" + target_type + "&record_key=" + record_key;
     $("#page_viewer").load(url, function(){
         showNotify("已載入 " + text);
         $('.codemirror').each(function(){
@@ -79,14 +80,26 @@ function selectTheme(){
     code_editor.setOption("theme", theme);
 }
 
+function on_save_error(data){
+    if (data && data.error){
+        showNotify(data.error);
+    }else{
+        showNotify("無法儲存");
+    }
+}
+
 function after_save(data){
-    showNotify("已儲存");
-    load();
+    if (data && data.error){
+        showNotify(data.error);
+    }else{
+        showNotify("已儲存");
+        load();
+    }
 }
 
 function load(callback){
     $("#history").html("");
-    json_async("/admin/code/records?target=" + target_id + "&content_type=" + target_type, null, function(data){
+    json_async(code_path+"/records?target=" + target_id + "&content_type=" + target_type, null, function(data){
         $.map(data.records, function(item, index){
             var t =  item.modified.isoformat.replace("T", " ").split(".")[0];
             $("#history").append("<option value='" + item.__key__ + "'>" + item.title + " - " + t + "</option>");
@@ -98,6 +111,7 @@ function load(callback){
 }
 
 $(function(){
+    code_path = $("body").data("code-path");
     target_id = $("body").data("target-id");
     target_path = $("body").data("path");
     target_type = "html";
@@ -119,6 +133,6 @@ $(function(){
     $("#btn_1").click(function(e){
         e.preventDefault();
         var d = $("form").serialize();
-        json_async("/admin/code/save" , "target=" + target_id + "&file_type=" + target_type + "&" + d, after_save, after_save);
+        json_async(code_path+"/edit" , "target=" + target_id + "&file_type=" + target_type + "&" + d, after_save, on_save_error);
     });
 });

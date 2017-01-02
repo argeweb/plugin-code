@@ -16,9 +16,7 @@ plugins_helper = {
         'code': {
             'group': u'原始碼',
             'actions': [
-                {'action': 'code_manager', 'name': u'線上編輯器'},
-                {'action': 'code_editor', 'name': u'編輯'},
-                {'action': 'list', 'name': u'原始碼管理'},
+                {'action': 'list', 'name': u'線上編輯器'},
                 {'action': 'add', 'name': u'新增原始碼'},
                 {'action': 'edit', 'name': u'編輯原始碼'},
                 {'action': 'view', 'name': u'檢視原始碼'},
@@ -50,6 +48,7 @@ def get_theme_path(theme, path):
         path = path[1:]
     return path
 
+
 class GetFileHandler(webapp2.RequestHandler):
     def get(self, request_path):
         from plugins.file.models.file_model import get_file
@@ -62,10 +61,11 @@ class GetFileHandler(webapp2.RequestHandler):
             request_path = get_theme_path(theme, request_path)
         version = ''
         is_min = False
-        if self.request.headers.get('If-None-Match'):
-            match = self.request.headers.get('If-None-Match').split('||')
-            if u'' + match[0] == request_path and u'' + match[-1] == theme:
-                return self.abort(304)
+        # if "no-cache" not in self.request.params:
+        #     if self.request.headers.get('If-None-Match'):
+        #         match = self.request.headers.get('If-None-Match').split('||')
+        #         if u'' + match[0] == request_path and u'' + match[-1] == theme:
+        #             return self.abort(304)
         c = get_file(request_path)
         if c is None:
             path, version, is_min = get_params_from_file_name(request_path)
