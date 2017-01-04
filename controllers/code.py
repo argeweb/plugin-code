@@ -302,21 +302,19 @@ class Code(Controller):
         return "".join(return_str)
 
     def admin_list(self):
-        self.meta.Model = FileModel
-        model = self.meta.Model
-        def query_factory_only_codefile(self):
-            return model.code_files()
+        def query_factory_only_codefile(controller):
+            return FileModel.code_files()
+
         self.scaffold.query_factory = query_factory_only_codefile
         return scaffold.list(self)
 
     @route
     @route_menu(list_name=u'backend', text=u'線上編輯器', sort=9704, group=u'檔案管理')
     def admin_list(self):
-        self.meta.Model = FileModel
+        def query_factory_only_codefile(controller):
+            return FileModel.code_files()
+
         self.meta.pagination_limit = 1000
-        model = self.meta.Model
-        def query_factory_only_codefile(self):
-            return model.code_files()
         self.scaffold.query_factory = query_factory_only_codefile
         return scaffold.list(self)
 
