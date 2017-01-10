@@ -111,7 +111,7 @@ function load(callback){
 }
 
 $(function(){
-    code_path = $("body").data("code-path");
+    code_path = $("body").data("code-path").replace("/list", "");
     target_id = $("body").data("target-id");
     target_path = $("body").data("path");
     target_type = "html";
