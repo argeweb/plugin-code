@@ -37,7 +37,7 @@
                     {% for item in list %}
                     <div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="/{{ item.path }}" data-content-type="{{ item.content_type }}">
                         <div class="file">
-                            <a href="{{ uri_action_link('code_editor', item) }}" target="aside_iframe">
+                            <a href="{{ uri_action_link('code_editor', item) }}">
                                 <div class="file-icon {{ item.content_type.replace('text/', '') }}"><span>{{ item.name }}</span></div>
                                 <div class="file-name">
                                     {{ item.title }}

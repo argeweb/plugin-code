@@ -88,7 +88,7 @@ class Code(Controller):
             n.put()
             n.make_directory()
             content_type = content_type.replace('text/', '')
-            html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code_editor?key=%s" target="aside_iframe"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
+            html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code/code_editor?key=%s"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
                    % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split('/')[-1], n.title, n.last_version)
         self.meta.change_view('json')
         self.context['data'] = {
