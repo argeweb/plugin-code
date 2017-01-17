@@ -71,6 +71,7 @@ class Code(Controller):
 
     @route
     def admin_add(self):
+        # TODO code 編輯器 樣式需調整
         target_name, content_type = self.process_path(self.params.get_string('path'))
         n = FileModel.get_by_path(target_name)
         info = 'error'

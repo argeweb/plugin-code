@@ -1,9 +1,9 @@
 {%- import 'backend/macros.html' as s with context -%}
 {%- extends s.layout() -%}
 {%- set list = context[scaffolding.plural] -%}
-{%- block layout_content -%}
+{%- block layout_header -%}
 <div class="ibox-content m-b-sm border-bottom h116">
-    <div style="padding: 6px 10px;">
+    <div style="margin-top: 0;">
         <h2 id="current_path" style=""></h2>
         <nav class="tab-nav ui-tab tab-nav-brand" style="margin-top: 14px;">
             <ul class="nav nav-list" style="margin-top: -2px !important;">
@@ -15,7 +15,9 @@
         </nav>
     </div>
 </div>
+{% endblock %}
 
+{%- block layout_content -%}
 <div class="wrapper wrapper-content">
     <div class="row">
         <div class="col-sm-3">
@@ -110,7 +112,7 @@
             });
         };
         page["insert_dir"] = function(str){
-            $(".folder-list").append('<li><a href="javascript:page[\'change_dir\'](\'' + str + '\')"><i class="material-icons">folder_open</i><span>' + str + '</span></a></li>');
+            $(".folder-list").append('<li><a href="javascript:page[\'change_dir\'](\'' + str + '\')"><i class="icon">folder_open</i><span>' + str + '</span></a></li>');
         };
         page["change_type"] = function(str){
             $(".file-menu.active, .file-menu .active").removeClass("active");
