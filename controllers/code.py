@@ -34,7 +34,7 @@ class Code(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_properties_in_list = ('title', 'content_type', 'last_version')
+        display_in_list = ('title', 'content_type', 'last_version')
 
     @staticmethod
     def process_path(path):
