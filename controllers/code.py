@@ -321,6 +321,8 @@ class Code(Controller):
 
     @route
     def admin_code_editor(self):
-        if self.uri_exists_with_permission(action='view') is False:
+        item = self.params.get_ndb_record('key')
+        if self.uri_exists_with_permission(action='view', item=item) is False:
             return self.error_and_abort(403)
         self.context['target_id'] = self.params.get_string('key')
+        self.context['item'] = item
