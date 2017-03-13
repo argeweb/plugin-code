@@ -36,7 +36,7 @@
         <div class="col-sm-9 animated fadeInRight">
             <div class="row">
                 <div class="col-sm-12" id="files-area">
-                    {% for item in list %}
+                    {% for item in list %}{% if item.is_code_file %}
                     <div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="/{{ item.path }}" data-content-type="{{ item.content_type }}">
                         <div class="file">
                             <a href="{{ uri_action_link('code_editor', item) }}">
@@ -48,7 +48,7 @@
                                 </div>
                             </a>
                         </div>
-                    </div>
+                    </div>{% endif %}
                     {% endfor %}
                 </div>
             </div>

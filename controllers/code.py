@@ -31,7 +31,8 @@ def send_message_to_client(client_id, data):
 class Code(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
-        pagination_limit = 10
+        pagination_limit = 50
+        Model = FileModel
 
     class Scaffold:
         display_in_list = ('title', 'content_type', 'last_version')
@@ -301,13 +302,6 @@ class Code(Controller):
                     ','.join(selectors),
                     ''.join(['%s:%s;' % (key, properties[key]) for key in porder])[:-1]))
         return "".join(return_str)
-
-    def admin_list(self):
-        def query_factory_only_codefile(controller):
-            return FileModel.code_files()
-
-        self.scaffold.query_factory = query_factory_only_codefile
-        return scaffold.list(self)
 
     @route
     @route_menu(list_name=u'backend', text=u'線上編輯器', sort=9704, group=u'檔案管理')
