@@ -31,7 +31,6 @@ def send_message_to_client(client_id, data):
 class Code(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
-        pagination_limit = 50
         Model = FileModel
 
     class Scaffold:
