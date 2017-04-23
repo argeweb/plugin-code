@@ -61,16 +61,14 @@ class GetFileHandler(webapp2.RequestHandler):
             request_path = get_theme_path(theme, request_path)
         version = ''
         is_min = False
-        # if "no-cache" not in self.request.params:
-        #     if self.request.headers.get('If-None-Match'):
-        #         match = self.request.headers.get('If-None-Match').split('||')
-        #         if u'' + match[0] == request_path and u'' + match[-1] == theme:
-        #             return self.abort(304)
         c = get_file(request_path)
         if c is None:
             path, version, is_min = get_params_from_file_name(request_path)
             c = get_file(path)
             if c is None:
+                import os.path
+                if os.path.exists(path):
+                    return self.redirect('/r/%s' % path)
                 return self.abort(404)
         content_type = c.content_type_or_default
         version = str(c.last_version) if version is '' else version
