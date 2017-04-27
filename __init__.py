@@ -67,6 +67,8 @@ class GetFileHandler(webapp2.RequestHandler):
             c = get_file(path)
             if c is None:
                 import os.path
+                if os.path.exists(request_path):
+                    return self.redirect('/r/%s' % request_path)
                 if os.path.exists(path):
                     return self.redirect('/r/%s' % path)
                 return self.abort(404)
