@@ -21,6 +21,7 @@ plugins_helper = {
                 {'action': 'edit', 'name': u'編輯原始碼'},
                 {'action': 'view', 'name': u'檢視原始碼'},
                 {'action': 'delete', 'name': u'刪除原始碼'},
+                {'action': 'plugins_check', 'name': u'啟用停用模組'},
             ]
         }
     }
