@@ -29,7 +29,7 @@ var target_path = "";
 var target_type = "";
 
 function showNotify(msg){
-    top.message.snackbar(msg);
+    top.snackbar(msg);
 }
 
 var code_editor = null;
