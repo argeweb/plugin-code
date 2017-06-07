@@ -42,6 +42,7 @@ def get_params_from_file_name(path):
         version = ''
     return path, str(version), is_min
 
+
 def get_theme_path(theme, path):
     if path.startswith(u'/themes/%s' % theme) is False:
         path = u'/themes/%s/%s' % (theme, path)
@@ -67,12 +68,7 @@ class GetFileHandler(webapp2.RequestHandler):
             path, version, is_min = get_params_from_file_name(request_path)
             c = get_file(path)
             if c is None:
-                import os.path
-                if os.path.exists(request_path):
-                    return self.redirect('/r/%s' % request_path)
-                if os.path.exists(path):
-                    return self.redirect('/r/%s' % path)
-                return self.abort(404)
+                return self.redirect('/r/%s' % request_path)
         content_type = c.content_type_or_default
         version = str(c.last_version) if version is '' else version
         etag = str(request_path) + '||' + version + '||' + str(theme)
@@ -93,4 +89,5 @@ class GetFileHandler(webapp2.RequestHandler):
             source = s.source
         self.response.out.write(source)
 
-getcode = webapp.WSGIApplication([('/(.+)+', GetFileHandler)],debug=False)
+
+getcode = webapp.WSGIApplication([('/(.+)+', GetFileHandler)], debug=False)
