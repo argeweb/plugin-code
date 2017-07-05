@@ -1,0 +1,49 @@
+- kind: CodeModel
+  properties:
+  - name: code_type
+  - name: target
+  - name: sort
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: code_type
+  - name: target
+  - name: version
+  - name: sort
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: code_type
+  - name: target
+  - name: version
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: content_type
+  - name: target
+  - name: sort
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: content_type
+  - name: target
+  - name: version
+  - name: sort
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: target
+  - name: version
+  - name: sort
+    direction: desc
+
+- kind: CodeModel
+  properties:
+  - name: version
+  - name: sort
+    direction: desc
