@@ -1,30 +1,30 @@
 {%- import 'backend/macros.html' as s with context -%}
 {%- extends s.layout() -%}
 {%- set list = context[scaffolding.plural] -%}
-{%- block layout_header -%}
-<div class="ibox-content m-b-sm border-bottom page-header-big h116">
+{% block page_big_header %}
+<div class="ibox-content m-b-sm border-bottom page-big-header">
     <div style="margin-top: 0;">
         <h2 id="current_path" style=""></h2>
         <nav class="tab-nav ui-tab tab-nav-brand" style="margin-top: 14px;">
-            <ul class="nav nav-list" style="margin-top: -2px !important;">
-                <li class="file-menu"><a data-toggle="tab" href="#" class="type-all active" data-content-type="all">All</a></li>
-                <li class="file-menu"><a data-toggle="tab" href="#" class="type-html" data-content-type="html">Html</a></li>
-                <li class="file-menu"><a data-toggle="tab" href="#" class="type-javascript" data-content-type="javascript">JS</a></li>
-                <li class="file-menu"><a data-toggle="tab" href="#" class="type-css" data-content-type="css">CSS</a></li>
+            <ul class="nav nav-list" style="padding-left: 15px;">
+                <li class="file-menu"><a style="display: inline-block;line-height: 30px;text-align: center;" data-toggle="tab" href="#" class="type-all active" data-content-type="all">All</a></li>
+                <li class="file-menu"><a style="display: inline-block;line-height: 30px;text-align: center;" data-toggle="tab" href="#" class="type-html" data-content-type="html">Html</a></li>
+                <li class="file-menu"><a style="display: inline-block;line-height: 30px;text-align: center;" data-toggle="tab" href="#" class="type-javascript" data-content-type="javascript">JS</a></li>
+                <li class="file-menu"><a style="display: inline-block;line-height: 30px;text-align: center;" data-toggle="tab" href="#" class="type-css" data-content-type="css">CSS</a></li>
             </ul>
         </nav>
     </div>
 </div>
 {% endblock %}
 
-{%- block layout_content -%}
+{% block page_content %}
 <div class="wrapper wrapper-content">
-    <div class="row">
+    <div class="row" style="margin-top: 30px;">
         <div class="col-sm-3">
             <div class="ibox float-e-margins">
-                <div class="ibox-content">
+                <div class="ibox-content" style="padding-top: 18px;">
                     <div class="file-manager">
-                        {% if uri_exists_with_permission(action="add") %}<button class="btn btn-primary btn-block" id="insert-file">新增文件</button>{% endif %}
+                        {% if uri_permission(action="add") %}<button class="btn btn-primary btn-block" id="insert-file">新增文件</button>{% endif %}
                         <div class="hr-line-dashed"></div>
                         <h5>虛擬目錄</h5>
                         <ul class="folder-list" style="padding: 0"></ul>
@@ -33,7 +33,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-sm-9 animated fadeInRight">
+        <div class="col-sm-9">
             <div class="row">
                 <div class="col-sm-12" id="files-area">
                     {% for item in list %}{% if item.is_code_file %}
@@ -72,7 +72,7 @@
             if (str !== "/" && str !== ".." && str !== "."){
                 page["current_path"].push(str);
             }
-            $("#current_path").html("<span>目前位置 :</span><span class='btn btn-flat' data-path='/'>assets</span>");
+            $("#current_path").html("<span style='float:left;line-height:48px;'>目前位置 :</span><span class='btn btn-flat' data-path='/'>assets</span>");
             var i=0;
             for (;i<page["current_path"].length;i++){
                 target_dict = target_dict[page["current_path"][i]];
@@ -168,7 +168,7 @@
                 showLoaderOnConfirm: true,
                 preConfirm: function (path) {
                     return new Promise(function (resolve, reject) {
-                        json_async("{% if uri_exists_with_permission(action="add") %}{{ uri_action_link('add') }}{% endif %}?path="+path, null, function(data){
+                        json_async("{% if uri_permission(action="add") %}{{ uri_action_link('add') }}{% endif %}?path="+path, null, function(data){
                             if (data.info == "done"){
                                 resolve(data)
                             }else{

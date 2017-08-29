@@ -6,6 +6,7 @@
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
 import webapp2
+from google.appengine.api.datastore_errors import NeedIndexError
 from google.appengine.ext import webapp
 from argeweb.core import settings
 
@@ -43,34 +44,57 @@ def get_params_from_file_name(path):
     return path, str(version), is_min
 
 
-def get_theme_path(theme, path):
-    if path.startswith(u'/themes/%s' % theme) is False:
-        path = u'/themes/%s/%s' % (theme, path)
+def get_theme_path(theme, path, pre_word=u'themes'):
+    templates = u''
+    if pre_word != u'themes':
+        templates = u"/templates"
+    if path.startswith(u'/%s/%s' % (pre_word, theme)) is False:
+        path = u'/%s/%s%s/%s' % (pre_word, theme, templates, path)
     if path.startswith('/') is True:
         path = path[1:]
     return path
 
 
 class GetFileHandler(webapp2.RequestHandler):
+    def get_string(self, key='', default_value=u''):
+        if key is '':
+            return default_value
+        try:
+            if key not in self.request.params:
+                rv = default_value
+            else:
+                rv = self.request.get(key)
+        except:
+            rv = default_value
+        if rv is None or rv is '' or rv is u'':
+            rv = u''
+        return rv
+
     def get(self, request_path):
         from plugins.file.models.file_model import get_file
         from google.appengine.api import namespace_manager
-        host_information, namespace, theme = settings.get_host_information_item()
+        host_information, namespace, theme, server_name = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
-        if request_path.startswith('assets/') is True:
-            request_path = request_path[7:]
-        else:
-            request_path = get_theme_path(theme, request_path)
-        version = ''
         is_min = False
-        c = get_file(request_path)
-        if c is None:
-            path, version, is_min = get_params_from_file_name(request_path)
-            c = get_file(path)
-            if c is None:
-                return self.redirect('/r/%s' % request_path)
-        content_type = c.content_type_or_default
-        version = str(c.last_version) if version is '' else version
+        version = ''
+
+        if request_path.startswith('/assets/') or request_path.startswith('assets/'):
+            request_path = request_path.replace('/assets/', '').replace('assets/', '')
+            resource = get_file(request_path)
+        else:
+            request_path = get_theme_path(theme, request_path, self.get_string('dir', u'themes'))
+            try:
+                resource = get_file(request_path)
+                if resource is None:
+                    path, version, is_min = get_params_from_file_name(request_path)
+                    resource = get_file(path)
+                    if resource is None:
+                        return self.redirect('/%s' % request_path)
+            except NeedIndexError:
+                return self.redirect('/%s' % request_path)
+
+        content_type = resource.content_type_or_default
+        version = str(resource.last_version) if version is '' else version
         etag = str(request_path) + '||' + version + '||' + str(theme)
         if self.request.headers.get('If-None-Match') == etag:
             return self.abort(304)
@@ -80,7 +104,7 @@ class GetFileHandler(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = content_type
         self.response.headers['ETag'] = etag
         from models.code_model import CodeModel
-        s = CodeModel.get_source(target=c, version=version)
+        s = CodeModel.get_source(target=resource, version=version)
         if s is None:
             return self.response.out.write('')
         if is_min is True:

@@ -8,12 +8,9 @@
 import random
 from time import time
 from google.appengine.api import channel
-from google.appengine.ext import ndb
 from argeweb import auth, add_authorizations
 from argeweb import Controller, scaffold
 from argeweb import route_with, route, route_menu
-from argeweb.components.pagination import Pagination
-from argeweb.components.search import Search
 from plugins.file.models.file_model import FileModel
 from ..models.code_model import CodeModel
 from argeweb.core import json_util
@@ -33,7 +30,7 @@ class Code(Controller):
         Model = FileModel
 
     class Scaffold:
-        display_in_list = ('title', 'content_type', 'last_version')
+        display_in_list = ['title', 'content_type', 'last_version']
 
     @staticmethod
     def process_path(path):
@@ -89,7 +86,7 @@ class Code(Controller):
             n.make_directory()
             content_type = content_type.replace('text/', '')
             html = u'<div class="col-xs-6 col-sm-4 col-md-3 file-info" data-path="%s" data-content-type="%s"><div class="file"><a href="/admin/code/code/code_editor?key=%s"><div class="file-icon %s"><span>%s</span></div><div class="file-name">%s<br><small>版本：%s</small></div></a></div></div>' \
-                   % (n.title, n.content_type, n.key.urlsafe(), n.content_type, n.title.split('/')[-1], n.title, n.last_version)
+                   % (n.title, n.content_type, n.key.urlsafe(), n.content_type.split('/')[-1], n.title, n.title, n.last_version)
         self.meta.change_view('json')
         self.context['data'] = {
             'info': info,
@@ -166,6 +163,13 @@ class Code(Controller):
             send_message_to_client(self.session['client_id'], {
                 'action': 'code_refresh', 'status': 'success', 'client': self.session['client_id']
             })
+
+    @route
+    def admin_download(self):
+        target_name, content_type = self.process_path(self.params.get_string('path'))
+        target = FileModel.get_or_create(target_name, content_type)
+        s = CodeModel.get_source(target=target)
+        return s.source
 
     @route
     def admin_upload(self):
@@ -302,12 +306,11 @@ class Code(Controller):
         return "".join(return_str)
 
     @route
-    @route_menu(list_name=u'backend', text=u'線上編輯器', sort=9704, group=u'檔案管理')
+    @route_menu(list_name=u'backend', group=u'檔案管理', text=u'線上編輯器', sort=9704)
     def admin_list(self):
         def query_factory_only_codefile(controller):
             return FileModel.code_files()
 
-        self.meta.pagination_limit = 1000
         self.scaffold.query_factory = query_factory_only_codefile
         return scaffold.list(self)
 

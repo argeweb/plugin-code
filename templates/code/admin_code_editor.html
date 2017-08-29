@@ -1,1 +1,1 @@
-{% if uri_exists_with_permission(action="view", item=item) %}<iframe name="code_editor_iframe" id="code_editor_iframe" width="100%" height="100%" frameborder="0" seamless="" src="{{ uri_action_link('index') }}?key={{ target_id }}"></iframe>{% endif %}
+{% if uri_permission(action="view", item=item) %}<iframe name="code_editor_iframe" id="code_editor_iframe" width="100%" height="100%" style="height: calc( 100% - 25px);" frameborder="0" seamless="" src="{{ uri_action_link('index') }}?key={{ target_id }}"></iframe>{% endif %}
