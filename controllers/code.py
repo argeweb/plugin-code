@@ -174,31 +174,34 @@ class Code(Controller):
     @route
     def admin_upload(self):
         self.meta.change_view('json')
-        target_name, content_type = self.process_path(self.params.get_string('path'))
-        code = self.params.get_string('code')
+        self.context['data'] = self.process_file(self.params.get_string('path'), self.params.get_string('code'), self.params.get_string('check_md5'))
+
+    @staticmethod
+    def process_file(path, code, check_md5):
+        target_name, content_type = Code.process_path(path)
+        code = code
         import hashlib
         try:
             m2 = hashlib.md5()
             m2.update(code)
             last_md5 = m2.hexdigest()
         except:
-            last_md5 = self.params.get_string('check_md5')
+            last_md5 = check_md5
         target = FileModel.get_or_create(target_name, content_type)
         if last_md5 == target.last_md5:
-            self.context['data'] = {'error': 'No need to change'}
-            return
+            return {'error': 'No need to change'}
+
         version = int(time()) - 1460000000
         target.last_version = version
         target.content_type = content_type
         if content_type == 'text/javascript':
-            source_minify = self.mini_js(code)
+            source_minify = Code.mini_js(code)
         elif content_type == 'text/css':
-            source_minify = self.mini_css(code)
+            source_minify = Code.mini_css(code)
         elif content_type == 'text/html':
             source_minify = u''
         else:
-            self.context['data'] = {'error': 'Wrong File Type'}
-            return
+            return {'error': 'Wrong File Type'}
         target.path = target_name
         target.last_md5 = last_md5
         target.content_length = len(code)
@@ -212,7 +215,7 @@ class Code(Controller):
         n.target = target.key
         n.put()
         target.make_directory()
-        self.context['data'] = {'info': 'done'}
+        return {'info': 'done'}
 
     @route_with("/code/<target_name>_info.json")
     def info(self, target_name):
@@ -261,11 +264,13 @@ class Code(Controller):
             return_dict['css-%s-%s' % (item, css.css_version)] = '/code/%s_%s.css' % (item, css.css_version)
         self.context['data'] = return_dict
 
-    def mini_js(self, js):
+    @staticmethod
+    def mini_js(js):
         from ..libs.jsmin import jsmin
         return jsmin(js)
 
-    def mini_css(self, css):
+    @staticmethod
+    def mini_css(css):
         import re
         # remove comments - this will break a lot of hacks :-P
         css = re.sub(r'\s*/\*\s*\*/', "$$HACK1$$", css)  # preserve IE<6 comment hack
@@ -306,7 +311,7 @@ class Code(Controller):
         return "".join(return_str)
 
     @route
-    @route_menu(list_name=u'backend', group=u'檔案管理', text=u'線上編輯器', sort=9704)
+    @route_menu(list_name=u'super_user', group=u'檔案管理', text=u'線上編輯器', sort=9704, icon='code')
     def admin_list(self):
         def query_factory_only_codefile(controller):
             return FileModel.code_files()

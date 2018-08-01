@@ -73,7 +73,7 @@ class GetFileHandler(webapp2.RequestHandler):
     def get(self, request_path):
         from plugins.file.models.file_model import get_file
         from google.appengine.api import namespace_manager
-        host_information, namespace, theme, server_name = settings.get_host_information_item()
+        host_information, namespace, theme, server_name, is_dev_server = settings.get_host_information_item()
         namespace_manager.set_namespace(namespace)
         is_min = False
         version = ''
